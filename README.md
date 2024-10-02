@@ -1,4 +1,4 @@
-# Developer Advocate Team Project Template
+# SEA-LION Quality Signal EDA Visualisation tool
 
-- Continuous Improvement: this template will be refined over time.
+
 
