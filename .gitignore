@@ -163,3 +163,13 @@ cython_debug/
 
 # Miscellaneous
 .DS_Store
+
+# kenlm and sentencepiece models
+*.arpa.bin
+*.sp.model
+*.sp.vocab
+lid.176.bin
+
+# datasets
+data/*/*.json
+data/*/*.jsonl
