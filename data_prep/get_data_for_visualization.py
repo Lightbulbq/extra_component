@@ -40,7 +40,7 @@ class GetDataForVisualization:
 
         # Load various parameters and models for language processing
         self.param = LoadParameters.load_parameters(lang_dataset_id)
-        self.stopwords = LoadParameters.load_stopwords(lang_dataset_id)
+        self.stopwords = LoadParameters.load_stopwords(lang_dataset_id) if config.ENABLE_STOPWORDS_RATIO else None
         self.flagged_words = LoadParameters.load_flagged_words(lang_dataset_id)
         self.model_lang_id = LoadParameters.load_model_lang_id(lang_dataset_id, path_fasttext_model)
         self.sentencepiece_model = LoadParameters.load_sentencepiece_model(lang_dataset_id, path_sentencepiece_model)

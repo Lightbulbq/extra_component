@@ -50,3 +50,10 @@ UPLOAD_FLAGGED_WORDS_FILE = False
 # Defines the method used to display selected columns (quality signals) in the main area - either you want to hide the selected columns from the whole set or you want to show only the selected columns
 USE_HIDE_SELECTED_COLS_METHOD = True
 SELECTED_COLS = ["stopwords_ratio"]
+
+# Flag for generating stopwords_ratio as a signal, requires a re-run of get_data_for_visualization
+ENABLE_STOPWORDS_RATIO = False 
+
+# Options for setting the maximum perplexity score
+USE_MAX_PERPLEXITY = False
+USER_DEF_MAX_PERPLEXITY = 5000

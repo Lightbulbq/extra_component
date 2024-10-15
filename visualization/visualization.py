@@ -154,7 +154,16 @@ class Visualization_for_lang:
                         "If the number of tokens of a document is lower than this number, the document is removed."
                     )
                     max_nb_words = int(np.max(self.docs["number_tokens"])) + 1
-                    cutoff_min_number_words = st.slider(cutoff_def, 0, min(max_nb_words, 500), 0)
+
+                    # Text input for minimum number of tokens
+                    min_tokens_input = st.text_input("Enter minimum number of tokens", "0")
+                    try:
+                        min_tokens_value = int(min_tokens_input)
+                    except ValueError:
+                        min_tokens_value = 0
+
+                    # Slider for minimum number of tokens
+                    cutoff_min_number_words = st.slider(cutoff_def, 0, min(max_nb_words, 500), min_tokens_value)
                     new_key = ("number_tokens", cutoff_min_number_words, False)
                     keys.append(new_key)
                     Visualization_for_lang.plot_hist(self.docs, new_key)
@@ -164,7 +173,16 @@ class Visualization_for_lang:
                     cutoff_def = (
                         "If the number of tokens of a document is higher than this number, the document is removed."
                     )
-                    cutoff_max_number_words = st.slider(cutoff_def, 0, max_nb_words, max_nb_words)
+
+                    # Text input for maximum number of tokens
+                    max_tokens_input = st.text_input("Enter maximum number of tokens", str(max_nb_words))
+                    try:
+                        max_tokens_value = int(max_tokens_input)
+                    except ValueError:
+                        max_tokens_value = max_nb_words
+
+                    # Slider for maximum number of tokens
+                    cutoff_max_number_words = st.slider(cutoff_def, 0, max_nb_words, max_tokens_value)
                     new_key = ("number_tokens", cutoff_max_number_words, True)
                     keys.append(new_key)
                     cond_2 = get_cond(new_key[0], new_key[1], new_key[2])
@@ -200,7 +218,16 @@ class Visualization_for_lang:
                         ]
 
                     cutoff_def = "If the character repetition ratio of a document is higher than this number, the document is removed."
-                    cutoff_character_repetition_ratio = st.slider(cutoff_def, 0.0, 1.0, 1.0, step=0.01)
+
+                    # Text input for character repetition ratio
+                    char_repetition_input = st.text_input("Enter character repetition ratio", "1.0")
+                    try:
+                        char_repetition_value = float(char_repetition_input)
+                    except ValueError:
+                        char_repetition_value = 1.0
+
+                    # Slider for character repetition ratio
+                    cutoff_character_repetition_ratio = st.slider(cutoff_def, 0.0, 1.0, char_repetition_value, step=0.01)
                     new_key = (
                         "character_repetition_ratio",
                         cutoff_character_repetition_ratio,
@@ -240,7 +267,16 @@ class Visualization_for_lang:
                         ]
 
                     cutoff_def = "If the token repetition ratio of a document is higher than this number, the document is removed."
-                    cutoff_word_repetition_ratio = st.slider(cutoff_def, 0.0, 1.0, 1.0, step=0.01)
+
+                    # Text input for token repetition ratio
+                    token_repetition_input = st.text_input("Enter token repetition ratio", "1.0")
+                    try:
+                        token_repetition_value = float(token_repetition_input)
+                    except ValueError:
+                        token_repetition_value = 1.0
+
+                    # Slider for token repetition ratio
+                    cutoff_word_repetition_ratio = st.slider(cutoff_def, 0.0, 1.0, token_repetition_value, step=0.01)
                     new_key = (
                         "token_repetition_ratio",
                         cutoff_word_repetition_ratio,
@@ -256,7 +292,16 @@ class Visualization_for_lang:
             if "special_characters_ratio" in columns:
                 with st.sidebar.expander("Special characters ratio"):
                     cutoff_def = "If the special characters ratio of a document is higher than this number, the document is removed."
-                    cutoff_special_characters_ratio = st.slider(cutoff_def, 0.0, 1.0, 1.0, step=0.01)
+
+                    # Text input for special characters ratio
+                    special_characters_input = st.text_input("Enter special characters ratio", "1.0")
+                    try:
+                        special_characters_value = float(special_characters_input)
+                    except ValueError:
+                        special_characters_value = 1.0
+
+                    # Slider for special characters ratio
+                    cutoff_special_characters_ratio = st.slider(cutoff_def, 0.0, 1.0, special_characters_value, step=0.01)
                     new_key = (
                         "special_characters_ratio",
                         cutoff_special_characters_ratio,
@@ -317,11 +362,20 @@ class Visualization_for_lang:
                     max_fwr = np.max(self.docs["flagged_words_ratio"])
                     max_fwr = float(np.ceil(max_fwr * 1000) / 1000)
                     max_fwr = 1.0 if math.isclose(max_fwr, 0.0, abs_tol=1e-9) else (max_fwr + 0.001)
+
+                    # Text input for flagged words ratio
+                    flagged_words_ratio_input = st.text_input("Enter flagged words ratio", str(max_fwr))
+                    try:
+                        flagged_words_ratio_value = float(flagged_words_ratio_input)
+                    except ValueError:
+                        flagged_words_ratio_value = max_fwr
+
+                    # Slider for flagged words ratio
                     cutoff_flagged_words_ratio = st.slider(
                         label=cutoff_def,
                         min_value=0.000,
                         max_value=max_fwr,
-                        value=max_fwr,
+                        value=flagged_words_ratio_value,
                         step=0.001,
                         format="%f",
                     )
@@ -351,10 +405,38 @@ class Visualization_for_lang:
                                 self.param["words_augmentation_join_char"],
                                 new_stopwords,
                             )
+                    else:
+                        # code that uses text input instead of file upload
+                        stopwords_input = st.text_input(
+                            "Enter stop words, separated by a comma (,), eg: the,and,of."
+                        )
+                        if stopwords_input:
+                            new_stopwords = set(stopwords_input.split(","))
+                            self.docs["stopwords_ratio"] = self.docs_checkpoint["stopwords_ratio"]
+                            for i in range(len(self.docs["stopwords_ratio"])):
+                                self.docs.loc[i, "stopwords_ratio"] = Filtering.compute_stopwords_ratio(
+                                    self.docs.loc[i, "text"],
+                                    self.sentencepiece_model_tok,
+                                    self.param["strip_characters"],
+                                    self.param["cond_words_augmentation"],
+                                    self.param["words_augmentation_group_sizes"],
+                                    self.param["words_augmentation_join_char"],
+                                    new_stopwords,
+                                )
+
                     cutoff_def = (
                         "If the stop words ratio of a document is lower than this number, the document is removed."
                     )
-                    cutoff_stopwords_ratio = st.slider(cutoff_def, 0.0, 1.0, 0.0, step=0.01)
+
+                    # Text input for stop words ratio
+                    stopwords_ratio_input = st.text_input("Enter stop words ratio", "0.0")
+                    try:
+                        stopwords_ratio_value = float(stopwords_ratio_input)
+                    except ValueError:
+                        stopwords_ratio_value = 0.0
+
+                    # Slider for stop words ratio
+                    cutoff_stopwords_ratio = st.slider(cutoff_def, 0.0, 1.0, stopwords_ratio_value, step=0.01)
                     new_key = ("stopwords_ratio", cutoff_stopwords_ratio, False)
                     keys.append(new_key)
                     Visualization_for_lang.plot_hist(self.docs, new_key)
@@ -365,7 +447,16 @@ class Visualization_for_lang:
             if "lang_id_score" in columns:
                 with st.sidebar.expander("Language ID confidence score"):
                     cutoff_def = "If the confidence score for the language identification prediction of a document is lower than this number, the document is removed."
-                    cutoff_lang_id_score = st.slider(cutoff_def, 0.0, 1.0, 0.0, step=0.01)
+
+                    # Text input for language ID confidence score
+                    lang_id_score_input = st.text_input("Enter language ID confidence score", "0.0")
+                    try:
+                        lang_id_score_value = float(lang_id_score_input)
+                    except ValueError:
+                        lang_id_score_value = 0.0
+
+                    # Slider for language ID confidence score
+                    cutoff_lang_id_score = st.slider(cutoff_def, 0.0, 1.0, lang_id_score_value, step=0.01)
                     new_key = ("lang_id_score", cutoff_lang_id_score, False)
                     keys.append(new_key)
                     Visualization_for_lang.plot_hist(self.docs, new_key)
@@ -378,9 +469,20 @@ class Visualization_for_lang:
                     cutoff_def = (
                         "If the perplexity score of a document is higher than this number, the document is removed."
                     )
-                    # max_pp = int(np.max(self.docs["perplexity_score"])) + 1
-                    max_pp = 5000
-                    cutoff_perplexity_score = st.slider(cutoff_def, 0, max_pp, max_pp)
+                    if config.USE_MAX_PERPLEXITY:
+                        max_pp = int(np.max(self.docs["perplexity_score"])) + 1
+                    else:
+                        max_pp = config.USER_DEF_MAX_PERPLEXITY
+
+                    # Text input for perplexity score
+                    perplexity_score_input = st.text_input("Enter perplexity score", str(max_pp))
+                    try:
+                        perplexity_score_value = int(perplexity_score_input)
+                    except ValueError:
+                        perplexity_score_value = max_pp
+
+                    # Slider for perplexity score
+                    cutoff_perplexity_score = st.slider(cutoff_def, 0, max_pp, perplexity_score_value)
                     new_key = ("perplexity_score", cutoff_perplexity_score, True)
                     keys.append(new_key)
                     Visualization_for_lang.plot_hist(self.docs, new_key)
@@ -617,8 +719,10 @@ class Visualization_for_lang:
                 cutoff_def = (
                     "If the perplexity score of a document is higher than this number, the document is removed."
                 )
-                # max_pp = int(np.max(self.sentences["perplexity_score"])) + 1
-                max_pp = 5000
+                if config.USE_MAX_PERPLEXITY:
+                    max_pp = int(np.max(self.docs["perplexity_score"])) + 1
+                else:
+                    max_pp = config.USER_DEF_MAX_PERPLEXITY
                 cutoff_perplexity_score = st.slider(cutoff_def, 0, max_pp, max_pp)
                 new_key = ("ppl", cutoff_perplexity_score, True)
                 keys.append(new_key)
