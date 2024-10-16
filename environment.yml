@@ -1,7 +1,4 @@
-name: pytorch
-channels:
-  - defaults
+name: qsviz
 dependencies:
   - python=3.9
   - pip=23.1.2
-prefix: /home/ubuntu/miniconda3/envs/pytorch
