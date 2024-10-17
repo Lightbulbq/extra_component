@@ -529,6 +529,7 @@ flagged_words = {
     ],
     "zh": english_flagged_words + chinese_flagged_words,
     "th": english_flagged_words
+    + chinese_flagged_words
     + [
         "กระดอ",
         "กระเด้า",
@@ -695,10 +696,10 @@ flagged_words = {
         "ราคาบอลไหล",
         "สัส",
     ],
-    "ms": english_flagged_words + [],
-    "my": english_flagged_words + [],
-    "tl": english_flagged_words + [],
-    "lo": english_flagged_words + [],
-    "km": english_flagged_words + [],
-    "ta": english_flagged_words + [],
+    "ms": english_flagged_words + chinese_flagged_words + [],
+    "my": english_flagged_words + chinese_flagged_words + [],
+    "tl": english_flagged_words + chinese_flagged_words + [],
+    "lo": english_flagged_words + chinese_flagged_words + [],
+    "km": english_flagged_words + chinese_flagged_words + [],
+    "ta": english_flagged_words + chinese_flagged_words + [],
 }
