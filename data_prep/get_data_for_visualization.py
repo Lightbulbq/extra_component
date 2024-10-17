@@ -249,6 +249,7 @@ class GetDataForVisualization:
                 stats_document["stopwords_ratio"] = stopwords_ratio
 
             # Compute flagged words ratio if flagged words are provided
+            flagged_words_ratio = 0
             if self.flagged_words:
                 flagged_words_ratio = Filtering.compute_flagged_words_ratio(
                     document,
@@ -259,7 +260,7 @@ class GetDataForVisualization:
                     self.param["words_augmentation_join_char"],
                     self.flagged_words,
                 )
-                stats_document["flagged_words_ratio"] = flagged_words_ratio
+            stats_document["flagged_words_ratio"] = flagged_words_ratio
 
             # Compute language identification score if model is provided
             if self.model_lang_id:
