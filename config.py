@@ -16,7 +16,7 @@ DATA_DIR = os.path.join(ROOT_DIR, "data", "datasets")
 GENERATED_SIGNALS_DIR = os.path.join(ROOT_DIR, "data", "generated_signals")
 
 # Data path
-TRAIN_DATA_PATH = os.path.join(DATA_DIR, "small_8days_dedup.jsonl")
+TRAIN_DATA_PATH = os.path.join(DATA_DIR, "sea-cc", "th", "sample_prepared.jsonl")
 
 # Path to the stopwords directory
 STOPWORDS_PATH = os.path.join(ROOT_DIR, "data", "stopwords", "raw")
@@ -36,13 +36,14 @@ FASTTEXT_MODEL_PATH = os.path.join(ROOT_DIR, "models", "lid.176.bin")
 NUM_DATA_SAMPLES = count_lines(TRAIN_DATA_PATH) # uncomment for all documents/lines
 
 # Defines the language ID - this label is used to choose kenlm model and stopwords list
-LANG_IDS = ["en"]  # possibilities from set: {'zh', 'ms', 'my', 'th', 'lo', 'km', 'ta'}
+LANG_IDS = ["th"]  # possibilities from set: {'zh', 'ms', 'my', 'th', 'lo', 'km', 'ta'}
 
 # Defines the key for the text in the json file
-KEY_FOR_TEXT = "raw_content"  # possibilities from set: {raw_content, paragraphs}
+KEY_FOR_TEXT = "paragraphs"  # possibilities from set: {raw_content, paragraphs} - note that sea-cc uses 'paragraphs'
 
 # Defines the method used to visualize the whole documents - either you want to visualize the whole documents or you want to visualize lines of the documents
-VISUALIZE_WHOLE_DOCUMENTS = True
+VISUALIZE_WHOLE_DOCUMENTS = False
+GENERATED_SIGNALS_FILE_SUFFIX = "docs" if VISUALIZE_WHOLE_DOCUMENTS else "lines"
 
 # Defines the method used to upload the flagged words file - either you want to upload the flagged words file or you want to use the prompt to input the flagged words
 UPLOAD_FLAGGED_WORDS_FILE = False
@@ -55,5 +56,5 @@ SELECTED_COLS = ["stopwords_ratio"]
 ENABLE_STOPWORDS_RATIO = False 
 
 # Options for setting the maximum perplexity score
-USE_MAX_PERPLEXITY = False
+USE_MAX_PERPLEXITY = True
 USER_DEF_MAX_PERPLEXITY = 5000
