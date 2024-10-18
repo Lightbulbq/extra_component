@@ -987,7 +987,7 @@ if __name__ == "__main__":
 
         param_visu_langs[lang_dataset_id] = {
             "path_data": os.path.join(
-                config.GENERATED_SIGNALS_DIR, f"{lang_dataset_id}_examples_with_stats_sent_lvl.json"
+                config.GENERATED_SIGNALS_DIR, f"{lang_dataset_id}_examples_with_stats_sent_lvl_{config.GENERATED_SIGNALS_FILE_SUFFIX}.json"
             ),
             "lang": langs_id.loc[langs_id["dataset_id"] == lang_dataset_id, "lang"].iloc[0],
             "num_docs": config.NUM_DATA_SAMPLES,
