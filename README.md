@@ -30,9 +30,11 @@ To generate this data:
 
 2. Use data preparation scripts in `data_prep` as needed to prepare the data. Functionality includes shuffling the JSON, extracting `n` number of lines, as well as one Python script to replace double newlines (`\n\n`), which is the convention for our paragraph delimiting, to single newline (`\n`) as needed for the visualizing of lines.
 
-3. Place the source json language files/folders which start with the language you are trying to generate the signals, inside the `data/generated_signals` folder following the format `LANGS_SET = ["en", "id", "km", "lo", "ms", "my", "ta", "th", "tl", "vi", "zh"]`
-   
-<img width="1144" alt="Screenshot 2024-10-22 at 1 23 31 PM" src="https://github.com/user-attachments/assets/07646250-7655-43b6-a904-561bdbb24342">
+3. Place the source json language files/folders which start with the language you are trying to generate the signals, inside the `data/generated_signals` folder following the format `LANGS_SET = ["en", "id", "km", "lo", "ms", "my", "ta", "th", "tl", "vi", "zh"]` 
+- e.g. `en_[name_of_file]`
+- Similar to the fomat below: 
+<img width="773" alt="Screenshot 2024-10-22 at 2 15 01 PM" src="https://github.com/user-attachments/assets/cd6906f2-1b1d-4621-9edd-1c169aed0f6e">
+
 
 
 4. Run `get_data_for_visualization.py` to do signal generation using:
