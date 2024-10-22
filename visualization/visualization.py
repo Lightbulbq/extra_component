@@ -28,6 +28,7 @@ from filters.languages_id import langs_id
 import config
 
 
+x = 0
 class Visualization_for_lang:
     def __init__(
         self,
@@ -40,8 +41,10 @@ class Visualization_for_lang:
         path_fasttext_model,
         path_sentencepiece_model,
         path_kenlm_model,
-    ):
+    ):  
+
         self.path_data = path_data
+        self.data = self.load_data()
         self.lang = lang
         self.num_docs = num_docs
         self.num_docs_for_words = num_docs_for_words
@@ -59,8 +62,19 @@ class Visualization_for_lang:
     def set_title(self):
         st.title(f"Filtering visualization for {self.lang}")
 
+    def load_data(self):
+        with open(self.path_data) as json_file:    
+            return json.load(json_file)
+    
+    def update_data(self, new_data):
+        self.data.update(new_data)
+
+    def save_data(self):
+        with open(self.path_data, 'w') as json_file:
+            json.dump(self.data, json_file, indent=4)
+
     def open_data(self):
-        with open(self.path_data) as json_file:
+        with open(self.path_data) as json_file:    
             data = json.load(json_file)
 
         self.num_docs = min(self.num_docs, len(data))
@@ -85,6 +99,7 @@ class Visualization_for_lang:
                     + " [...] [THIS LONG TEXT HAS BEEN TRUNCATED FOR DISPLAY REASONS]"
                 )
         self.docs_checkpoint = pd.DataFrame(docs)
+
 
         # docs_checkpoint_editable = self.docs_checkpoint.copy()
         # if 'selected_row' not in st.session_state:
@@ -960,31 +975,31 @@ class Visualization:
 
     def choose_lang(self):
         options = config.FILES_IN_GENERATED_SIGNALS_DIR 
-        lang_chosen = st.selectbox("Select the file for visualization", options)
+        file_chosen = st.selectbox("Select the file for visualization", options)
 
-        if lang_chosen != "None":
-            lang_chosen_value = lang_chosen.split('/')[-1]
-            lang_chosen_dataset_id = lang_chosen_value[0:2]
+        if file_chosen != "None":
+            file_chosen_value = file_chosen.split('/')[-1]
+            file_chosen_dataset_id = file_chosen_value[0:2]
 
-            if lang_chosen_dataset_id not in config.LANG_IDS:
-                config.LANG_IDS.append(lang_chosen_dataset_id)
-            #     print(f"Added {lang_chosen_dataset_id} to config.LANG_IDS.")
+            if file_chosen_dataset_id not in config.LANG_IDS:
+                config.LANG_IDS.append(file_chosen_dataset_id)
+            #     print(f"Added {file_chosen_dataset_id} to config.LANG_IDS.")
             # else:
-            #     print(f"{lang_chosen_dataset_id} is already in config.LANG_IDS.")
-            st.session_state.lang_chosen = lang_chosen 
+            #     print(f"{file_chosen_dataset_id} is already in config.LANG_IDS.")
+            st.session_state.file_chosen = file_chosen 
 
     def visualization(self):
         # Check if the language has been selected
-        if 'lang_chosen' in st.session_state:
-            lang_chosen = st.session_state.lang_chosen 
+        if 'file_chosen' in st.session_state:
+            file_chosen = st.session_state.file_chosen 
             # ensure that sub folder does not affect the loading of file
-            lang_chosen_value = lang_chosen.split('/')[-1]
+            file_chosen_value = file_chosen.split('/')[-1]
             # set the language data set in readme
-            lang_dataset_id = lang_chosen_value[0:2]
+            lang_dataset_id = file_chosen_value[0:2]
 
 
             # Exit if the file is not valid
-            if not lang_chosen.endswith('.json'):
+            if not file_chosen.endswith('.json'):
                 st.error("The selected file is not a valid JSON file.")
                 
             # Load your parameters based on the selected language
@@ -1008,7 +1023,7 @@ class Visualization:
 
                 # If all models are found, continue setting parameters
                 self.param_visu_langs[lang_dataset_id] = {
-                    "path_data": os.path.join(config.GENERATED_SIGNALS_DIR, lang_chosen),
+                    "path_data": os.path.join(config.GENERATED_SIGNALS_DIR, file_chosen),
                     "lang": langs_id.loc[langs_id["dataset_id"] == lang_dataset_id, "lang"].iloc[0],
                     "num_docs": config.NUM_DATA_SAMPLES,
                     "num_docs_for_words": config.NUM_DATA_SAMPLES,

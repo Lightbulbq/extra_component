@@ -19,20 +19,17 @@ GENERATED_SIGNALS_DIR = os.path.join(ROOT_DIR, "data", "generated_signals")
 FILES_IN_GENERATED_SIGNALS_DIR =[]
 for dirpath, dirnames, filenames in os.walk(GENERATED_SIGNALS_DIR):
     for filename in filenames:
-        if filename.endswith('.DS_Store'):
-            continue
-        # Check if the file is in a subfolder
-        else:
+        if filename.endswith('.json'):
             relative_path = os.path.relpath(dirpath, GENERATED_SIGNALS_DIR)
-        
             if relative_path == ".":  # If in the root folder, just show the filename
-                print(filename)
                 FILES_IN_GENERATED_SIGNALS_DIR.append(filename)
             else:  # If in a subfolder, show subfolder/filename
                 FILES_IN_GENERATED_SIGNALS_DIR.append(os.path.join(relative_path, filename))
-
+        else:
+            continue
+        
 # Data path
-TRAIN_DATA_PATH = os.path.join(DATA_DIR, "sea-cc", "th", "sample_prepared.jsonl")
+TRAIN_DATA_PATH = os.path.join(DATA_DIR, "small_8days_dedup.jsonl")
 
 # Path to the stopwords directory
 STOPWORDS_PATH = os.path.join(ROOT_DIR, "data", "stopwords", "raw")
@@ -71,6 +68,8 @@ SELECTED_COLS = ["stopwords_ratio"]
 
 # Flag for generating stopwords_ratio as a signal, requires a re-run of get_data_for_visualization
 ENABLE_STOPWORDS_RATIO = False 
+
+DATA_OPENED = 0
 
 # Options for setting the maximum perplexity score
 USE_MAX_PERPLEXITY = True
