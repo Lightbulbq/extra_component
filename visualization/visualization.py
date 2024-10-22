@@ -60,8 +60,12 @@ class Visualization_for_lang:
         st.title(f"Filtering visualization for {self.lang}")
 
     def open_data(self):
-        with open(self.path_data) as json_file:
-            data = json.load(json_file)
+        try:
+            with open(self.path_data) as json_file:
+                data = json.load(json_file)
+
+        except json.JSONDecodeError as e:
+            raise ValueError("Error decoding JSON: The document is empty or not a valid JSON file.") from e
 
         self.num_docs = min(self.num_docs, len(data))
         self.num_docs_for_words = min(self.num_docs_for_words, len(data))
