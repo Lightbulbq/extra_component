@@ -976,8 +976,10 @@ class Visualization:
     def visualization(self):
         # Check if the language has been selected
         if 'lang_chosen' in st.session_state:
-            lang_chosen = st.session_state.lang_chosen  
+            lang_chosen = st.session_state.lang_chosen 
+            # ensure that sub folder does not affect the loading of file
             lang_chosen_value = lang_chosen.split('/')[-1]
+            # set the language data set in readme
             lang_dataset_id = lang_chosen_value[0:2]
 
 
@@ -1039,9 +1041,10 @@ if __name__ == "__main__":
     st.set_page_config(layout="wide")
     path_instructions = config.INSTRUCTIONS_PDF_PATH
     param_visu_langs = {}
-
     visualization_instance = Visualization(path_instructions, param_visu_langs)
-
     visualization_instance.choose_lang()
-
     visualization_instance.visualization()
+    
+    
+    
+    

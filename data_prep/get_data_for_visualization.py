@@ -293,7 +293,7 @@ def get_data(lang_dataset_id):
     """
     # Output path for saving statistics
     os.makedirs(config.GENERATED_SIGNALS_DIR, exist_ok=True)
-    path_save_stats = os.path.join(config.GENERATED_SIGNALS_DIR, f"{lang_dataset_id}_examples_with_stats_sent_lvl.json")
+    path_save_stats = os.path.join(config.GENERATED_SIGNALS_DIR, f"{lang_dataset_id}_examples_with_stats_sent_lvl_{config.GENERATED_SIGNALS_FILE_SUFFIX}.json")
 
     # Paths for language detection models
     path_fasttext_model = config.FASTTEXT_MODEL_PATH
