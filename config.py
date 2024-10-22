@@ -13,7 +13,23 @@ def count_lines(file_path):
 ROOT_DIR = os.getcwd()
 BASE_DIR = os.path.join(ROOT_DIR, "visualization")
 DATA_DIR = os.path.join(ROOT_DIR, "data", "datasets")
-GENERATED_SIGNALS_DIR = os.path.join(ROOT_DIR, "data", "generated_signals")
+
+GENERATED_SIGNALS_DIR = os.path.join(ROOT_DIR, "data", "generated_signals") 
+
+FILES_IN_GENERATED_SIGNALS_DIR =[]
+for dirpath, dirnames, filenames in os.walk(GENERATED_SIGNALS_DIR):
+    for filename in filenames:
+        if filename.endswith('.DS_Store'):
+            continue
+        # Check if the file is in a subfolder
+        else:
+            relative_path = os.path.relpath(dirpath, GENERATED_SIGNALS_DIR)
+        
+            if relative_path == ".":  # If in the root folder, just show the filename
+                print(filename)
+                FILES_IN_GENERATED_SIGNALS_DIR.append(filename)
+            else:  # If in a subfolder, show subfolder/filename
+                FILES_IN_GENERATED_SIGNALS_DIR.append(os.path.join(relative_path, filename))
 
 # Data path
 TRAIN_DATA_PATH = os.path.join(DATA_DIR, "small_8days_dedup.jsonl")
@@ -27,6 +43,7 @@ INSTRUCTIONS_PDF_PATH = os.path.join(BASE_DIR, "note", "explanation_filtering_pi
 # Paths to KenLM models, note that 2 distinct groups of languages use different wikipedia sources
 LANGS_SET = ["en", "id", "km", "lo", "ms", "my", "ta", "th", "tl", "vi", "zh"]
 KENLM_PATH = os.path.join(ROOT_DIR, "models", "kenlm")
+
 # KENLM_PATH_2 = KENLM_PATH_1
 
 # Path to fasttext model (for language identification)
@@ -35,8 +52,8 @@ FASTTEXT_MODEL_PATH = os.path.join(ROOT_DIR, "models", "lid.176.bin")
 # Defines number of samples to visualize. Use count_lines if you want the maximum, else you can set smaller numbers. Note that if VISUALIZE_WHOLE_DOCUMENTS is false, this refers to the lines of the documents as samples
 NUM_DATA_SAMPLES = count_lines(TRAIN_DATA_PATH) # uncomment for all documents/lines
 
-# Defines the language ID - this label is used to choose kenlm model and stopwords list
-LANG_IDS = ["en"]  # possibilities from set: {'zh', 'ms', 'my', 'th', 'lo', 'km', 'ta'}
+# # Defines the language ID - this label is used to choose kenlm model and stopwords list
+LANG_IDS = []  # possibilities from set: {'zh', 'ms', 'my', 'th', 'lo', 'km', 'ta'}
 
 # Defines the key for the text in the json file
 KEY_FOR_TEXT = "raw_content"  # possibilities from set: {raw_content, paragraphs}
