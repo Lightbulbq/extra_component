@@ -30,13 +30,24 @@ To generate this data:
 
 2. Use data preparation scripts in `data_prep` as needed to prepare the data. Functionality includes shuffling the JSON, extracting `n` number of lines, as well as one Python script to replace double newlines (`\n\n`), which is the convention for our paragraph delimiting, to single newline (`\n`) as needed for the visualizing of lines.
 
-3. Edit the following variables in `config.py` to define the data file you are visualizing, language, and other settings.
+3. Place the source json language files/folders which start with the language you are trying to generate the signals, inside the `data/generated_signals` folder following the format
+   ```
+   LANGS_SET = ["en", "id", "km", "lo", "ms", "my", "ta", "th", "tl", "vi", "zh"]
+   ```
+- `en` - English
+- `id` - Indonesian
+- `km` - Lao
+- `ms` - Malay
+- `my` - Burmese(Myanmar)
+- `ta` - Tamil
+- `th` - Thai
+- `tl` - Tagalog
+- `vi` - Vietnamese
+- `zh` - Chinese
+  
+Similar to the fomat below  e.g. `en_[name_of_file].json`: 
+<img width="773" alt="Screenshot 2024-10-22 at 2 15 01 PM" src="https://github.com/user-attachments/assets/cd6906f2-1b1d-4621-9edd-1c169aed0f6e">
 
-```
-TRAIN_DATA_PATH= 
-LANG_IDS=
-KEY_FOR_TEXT=
-```
 
 4. Run `get_data_for_visualization.py` to do signal generation using:
 

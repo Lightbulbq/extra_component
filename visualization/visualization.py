@@ -85,6 +85,23 @@ class Visualization_for_lang:
                     + " [...] [THIS LONG TEXT HAS BEEN TRUNCATED FOR DISPLAY REASONS]"
                 )
         self.docs_checkpoint = pd.DataFrame(docs)
+
+        # docs_checkpoint_editable = self.docs_checkpoint.copy()
+        # if 'selected_row' not in st.session_state:
+        #         st.session_state.selected_row = None
+
+        #     # Streamlit UI elements for row selection
+        # st.header("Row Selection")
+        # selected_row_index = st.selectbox("Select Row to Edit:", range(len(docs_checkpoint_editable)))
+
+        # # Button to highlight the selected row
+        # if st.button("Highlight Selected Row"):
+        #     st.session_state.selected_row = selected_row_index
+        #     # Change annotation to "editing" for the selected row
+        #     self.docs_checkpoint.at[selected_row_index, 'annotation'] = "editing"
+        #     st.session_state.original_df.at[selected_row_index, 'annotation'] = "editing"  
+
+
         self.docs = self.docs_checkpoint
 
     @staticmethod
@@ -942,62 +959,92 @@ class Visualization:
         )
 
     def choose_lang(self):
-        options = [self.param_visu_langs[lang_dataset_id]["lang"] for lang_dataset_id in self.param_visu_langs]
-        index = options.index("English") if ("English" in options) else 0
-        lang_chosen = st.selectbox(
-            label="Select the language for visualization",
-            options=options,
-            index=index,
-        )
+        options = config.FILES_IN_GENERATED_SIGNALS_DIR 
+        lang_chosen = st.selectbox("Select the file for visualization", options)
+
         if lang_chosen != "None":
-            lang_chosen_dataset_id = langs_id.loc[langs_id["lang"] == lang_chosen, "dataset_id"].iloc[0]
-            visualization_for_lang = Visualization_for_lang(
-                path_data=self.param_visu_langs[lang_chosen_dataset_id]["path_data"],
-                lang=self.param_visu_langs[lang_chosen_dataset_id]["lang"],
-                num_docs=self.param_visu_langs[lang_chosen_dataset_id]["num_docs"],
-                num_docs_for_words=self.param_visu_langs[lang_chosen_dataset_id]["num_docs_for_words"],
-                max_len_text_display=self.param_visu_langs[lang_chosen_dataset_id]["max_len_text_display"],
-                lang_dataset_id=self.param_visu_langs[lang_chosen_dataset_id]["lang_dataset_id"],
-                path_fasttext_model=self.param_visu_langs[lang_chosen_dataset_id]["path_fasttext_model"],
-                path_sentencepiece_model=self.param_visu_langs[lang_chosen_dataset_id]["path_sentencepiece_model"],
-                path_kenlm_model=self.param_visu_langs[lang_chosen_dataset_id]["path_kenlm_model"],
-            )
-            visualization_for_lang.visualization_for_lang()
+            lang_chosen_value = lang_chosen.split('/')[-1]
+            lang_chosen_dataset_id = lang_chosen_value[0:2]
+
+            if lang_chosen_dataset_id not in config.LANG_IDS:
+                config.LANG_IDS.append(lang_chosen_dataset_id)
+            #     print(f"Added {lang_chosen_dataset_id} to config.LANG_IDS.")
+            # else:
+            #     print(f"{lang_chosen_dataset_id} is already in config.LANG_IDS.")
+            st.session_state.lang_chosen = lang_chosen 
 
     def visualization(self):
-        self.preamble()
-        # self.warning_preamble()
-        self.choose_lang()
+        # Check if the language has been selected
+        if 'lang_chosen' in st.session_state:
+            lang_chosen = st.session_state.lang_chosen 
+            # ensure that sub folder does not affect the loading of file
+            lang_chosen_value = lang_chosen.split('/')[-1]
+            # set the language data set in readme
+            lang_dataset_id = lang_chosen_value[0:2]
 
+
+            # Exit if the file is not valid
+            if not lang_chosen.endswith('.json'):
+                st.error("The selected file is not a valid JSON file.")
+                
+            # Load your parameters based on the selected language
+            if lang_dataset_id in config.LANGS_SET:
+                kenlm_path = config.KENLM_PATH
+                path_fasttext_model = config.FASTTEXT_MODEL_PATH
+                path_sentencepiece_model = os.path.join(kenlm_path, f"{lang_dataset_id}.sp.model")
+                path_kenlm_model = os.path.join(kenlm_path, f"{lang_dataset_id}.arpa.bin")
+
+                # Check if the FastText model exists
+                if not os.path.exists(path_fasttext_model):
+                    raise FileNotFoundError(f"FastText model not found at {path_fasttext_model}.")
+
+                # Check if the SentencePiece model exists
+                if not os.path.exists(path_sentencepiece_model):
+                    raise FileNotFoundError(f"SentencePiece model not found at {path_sentencepiece_model}.")
+
+                # Check if the KenLM model exists
+                if not os.path.exists(path_kenlm_model):
+                    raise FileNotFoundError(f"KenLM model not found at {path_kenlm_model}.")
+
+                # If all models are found, continue setting parameters
+                self.param_visu_langs[lang_dataset_id] = {
+                    "path_data": os.path.join(config.GENERATED_SIGNALS_DIR, lang_chosen),
+                    "lang": langs_id.loc[langs_id["dataset_id"] == lang_dataset_id, "lang"].iloc[0],
+                    "num_docs": config.NUM_DATA_SAMPLES,
+                    "num_docs_for_words": config.NUM_DATA_SAMPLES,
+                    "max_len_text_display": 10000,
+                    "lang_dataset_id": lang_dataset_id,
+                    "path_fasttext_model": path_fasttext_model,
+                    "path_sentencepiece_model": path_sentencepiece_model,
+                    "path_kenlm_model": path_kenlm_model,
+                }
+
+                visualization_for_lang = Visualization_for_lang(
+                    path_data=self.param_visu_langs[lang_dataset_id]["path_data"],
+                    lang=self.param_visu_langs[lang_dataset_id]["lang"],
+                    num_docs=self.param_visu_langs[lang_dataset_id]["num_docs"],
+                    num_docs_for_words=self.param_visu_langs[lang_dataset_id]["num_docs_for_words"],
+                    max_len_text_display=self.param_visu_langs[lang_dataset_id]["max_len_text_display"],
+                    lang_dataset_id=self.param_visu_langs[lang_dataset_id]["lang_dataset_id"],
+                    path_fasttext_model=self.param_visu_langs[lang_dataset_id]["path_fasttext_model"],
+                    path_sentencepiece_model=self.param_visu_langs[lang_dataset_id]["path_sentencepiece_model"],
+                    path_kenlm_model=self.param_visu_langs[lang_dataset_id]["path_kenlm_model"],
+                )
+
+                visualization_for_lang.visualization_for_lang()
+            else:
+                st.error(f"Please use a correct lang_id: {lang_dataset_id}")
+        # else:
+        #     st.warning("Please select a language to continue.")
 
 if __name__ == "__main__":
-    # set page to wide mode by default
     st.set_page_config(layout="wide")
-
     path_instructions = config.INSTRUCTIONS_PDF_PATH
-
     param_visu_langs = {}
-
-    for lang_dataset_id in config.LANG_IDS:
-        if lang_dataset_id in config.LANGS_SET:
-            kenlm_path = config.KENLM_PATH
-        else:
-            print("Please use correct lang_id")
-            exit()
-
-        param_visu_langs[lang_dataset_id] = {
-            "path_data": os.path.join(
-                config.GENERATED_SIGNALS_DIR, f"{lang_dataset_id}_examples_with_stats_sent_lvl_{config.GENERATED_SIGNALS_FILE_SUFFIX}.json"
-            ),
-            "lang": langs_id.loc[langs_id["dataset_id"] == lang_dataset_id, "lang"].iloc[0],
-            "num_docs": config.NUM_DATA_SAMPLES,
-            "num_docs_for_words": config.NUM_DATA_SAMPLES,
-            "max_len_text_display": 10000,
-            "lang_dataset_id": lang_dataset_id,
-            "path_fasttext_model": config.FASTTEXT_MODEL_PATH,
-            "path_sentencepiece_model": f"{kenlm_path}/{lang_dataset_id}.sp.model",
-            "path_kenlm_model": f"{kenlm_path}/{lang_dataset_id}.arpa.bin",
-        }
-
-    visualization = Visualization(path_instructions, param_visu_langs)
-    visualization.visualization()
+    visualization_instance = Visualization(path_instructions, param_visu_langs)
+    visualization_instance.choose_lang()
+    visualization_instance.visualization()
+    
+    
+    
+    
