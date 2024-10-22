@@ -45,7 +45,7 @@ To generate this data:
 - `vi` - Vietnamese
 - `zh` - Chinese
   
-- Similar to the fomat below  e.g. `en_[name_of_file].json`: 
+Similar to the fomat below  e.g. `en_[name_of_file].json`: 
 <img width="773" alt="Screenshot 2024-10-22 at 2 15 01 PM" src="https://github.com/user-attachments/assets/cd6906f2-1b1d-4621-9edd-1c169aed0f6e">
 
 
