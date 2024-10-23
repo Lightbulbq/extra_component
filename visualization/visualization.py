@@ -95,8 +95,7 @@ class Visualization_for_lang:
 
     @staticmethod
     def print_discarded_by_cond(cond):
-        st.caption(f"{(len(cond) - np.sum(1*cond)) / len(cond) *
-                   100:.2f}% of the total is discarded with this filter.")
+        st.caption(f"{(len(cond) - np.sum(1*cond)) / len(cond) *100:.2f}% of the total is discarded with this filter.")
 
     @staticmethod
     def plot_hist(dataframe, key, num_bins=50):
@@ -117,8 +116,7 @@ class Visualization_for_lang:
     def display_dataset(dataframe, cond, description, type_of_examples):
         displayed_examples = dataframe.loc[cond]
         st.subheader(
-            f"{description}: {len(displayed_examples)} {type_of_examples} ({
-                len(displayed_examples) / len(dataframe.index) * 100:.2f}%)"
+            f"{description}: {len(displayed_examples)} {type_of_examples} ({len(displayed_examples) / len(dataframe.index) * 100:.2f}%)"
         )
         st.markdown(
             "Click on a column to sort by it, place the cursor on the text to display it.")
@@ -537,8 +535,7 @@ class Visualization_for_lang:
             return keys, conds
 
         with st.expander(f"Filtering on documents, for {self.num_docs} {self.lang} documents"):
-            st.header(f"Filtering on documents, for {
-                      self.num_docs} {self.lang} documents")
+            st.header(f"Filtering on documents, for {self.num_docs} {self.lang} documents")
 
             if "labels" in list(self.docs):
                 chosen_label = st.selectbox(
@@ -719,10 +716,8 @@ class Visualization_for_lang:
                             self.words["incorrect_substrings"]) * 1
                         with_incor_sub = np.sum(incor_sub)
                         without_incor_sub = len(incor_sub) - with_incor_sub
-                        st.markdown(f"Number of words with incorrect substrings: {
-                                    with_incor_sub}")
-                        st.markdown(f"Number of words without incorrect substrings: {
-                                    without_incor_sub}")
+                        st.markdown(f"Number of words with incorrect substrings: {with_incor_sub}")
+                        st.markdown(f"Number of words without incorrect substrings: {without_incor_sub}")
 
                     if incorrect_substrings:
                         cond_incorrect_substrings = np.invert(
@@ -739,13 +734,11 @@ class Visualization_for_lang:
             all_conds_words = np.all(list(conds_words.values()), axis=0)
 
             with st.expander(f"Filtering on words, for {self.num_docs_for_words} {self.lang} documents"):
-                st.header(f"Filtering on words, for {
-                          self.num_docs_for_words} {self.lang} documents")
+                st.header(f"Filtering on words, for {self.num_docs_for_words} {self.lang} documents")
 
                 st.markdown(
                     f"Since the number of words is way larger than the number of documents, "
-                    f"we consider in this section words for only {
-                        self.num_docs_for_words} documents."
+                    f"we consider in this section words for only {self.num_docs_for_words} documents."
                 )
 
                 Visualization_for_lang.display_dataset(
@@ -821,8 +814,7 @@ class Visualization_for_lang:
         all_conds = np.all(all_conds, axis=0)
 
         with st.expander(f"Filtering on sentences, for {self.num_docs_for_sents} {self.lang} documents"):
-            st.header(f"Filtering on sentences, for {
-                      self.num_docs_for_sents} {self.lang} documents")
+            st.header(f"Filtering on sentences, for {self.num_docs_for_sents} {self.lang} documents")
 
             Visualization_for_lang.display_dataset(
                 self.sentences, np.invert(all_conds), "Discarded sentences", "sents")
@@ -902,8 +894,7 @@ class Visualization_for_lang:
                         )
                         character_repetition_ratio = round(
                             character_repetition_ratio, 3)
-                        st.markdown(f"Character repetition ratio: {
-                                    character_repetition_ratio}")
+                        st.markdown(f"Character repetition ratio: {character_repetition_ratio}")
                         if is_doc_discarded(key, character_repetition_ratio):
                             is_discarded = True
 
@@ -915,8 +906,7 @@ class Visualization_for_lang:
                             int(key[3]),
                         )
                         word_repetition_ratio = round(word_repetition_ratio, 3)
-                        st.markdown(f"Token repetition ratio: {
-                                    word_repetition_ratio}")
+                        st.markdown(f"Token repetition ratio: {word_repetition_ratio}")
                         if is_doc_discarded(key, word_repetition_ratio):
                             is_discarded = True
 
@@ -926,8 +916,7 @@ class Visualization_for_lang:
                         )
                         special_characters_ratio = round(
                             special_characters_ratio, 3)
-                        st.markdown(f"Special characters ratio: {
-                                    special_characters_ratio}")
+                        st.markdown(f"Special characters ratio: {special_characters_ratio}")
                         if is_doc_discarded(key, special_characters_ratio):
                             is_discarded = True
 
@@ -957,8 +946,7 @@ class Visualization_for_lang:
                             self.flagged_words,
                         )
                         flagged_words_ratio = round(flagged_words_ratio, 3)
-                        st.markdown(f"Flagged words ratio: {
-                                    flagged_words_ratio}")
+                        st.markdown(f"Flagged words ratio: {flagged_words_ratio}")
                         if is_doc_discarded(key, flagged_words_ratio):
                             is_discarded = True
 
@@ -968,8 +956,7 @@ class Visualization_for_lang:
                             lang_id_score,
                         ) = Filtering.compute_lang_id_pred_score(personal_doc, self.model_lang_id)
                         lang_id_score = round(lang_id_score, 3)
-                        st.markdown(f"Language identification confidence score: {
-                                    lang_id_score}")
+                        st.markdown(f"Language identification confidence score: {lang_id_score}")
                         if is_doc_discarded(key, lang_id_score) or (self.lang_dataset_id != lang_pred_dataset_id):
                             is_discarded = True
 
@@ -1005,8 +992,7 @@ class Visualization:
             with open(bin_file, "rb") as f:
                 data = f.read()
             bin_str = base64.b64encode(data).decode()
-            href = f'<a href="data:application/octet-stream;base64,{
-                bin_str}" download="{os.path.basename(bin_file)}">{file_label}</a>'
+            href = f'<a href="data:application/octet-stream;base64,{bin_str}" download="{os.path.basename(bin_file)}">{file_label}</a>'
             return href
 
         st.markdown(
@@ -1065,13 +1051,11 @@ class Visualization:
 
                 # Check if the FastText model exists
                 if not os.path.exists(path_fasttext_model):
-                    raise FileNotFoundError(f"FastText model not found at {
-                                            path_fasttext_model}.")
+                    raise FileNotFoundError(f"FastText model not found at {path_fasttext_model}.")
 
                 # Check if the SentencePiece model exists
                 if not os.path.exists(path_sentencepiece_model):
-                    raise FileNotFoundError(f"SentencePiece model not found at {
-                                            path_sentencepiece_model}.")
+                    raise FileNotFoundError(f"SentencePiece model not found at {path_sentencepiece_model}.")
 
                 # Check if the KenLM model exists
                 if not os.path.exists(path_kenlm_model):
