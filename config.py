@@ -69,8 +69,6 @@ SELECTED_COLS = ["stopwords_ratio"]
 # Flag for generating stopwords_ratio as a signal, requires a re-run of get_data_for_visualization
 ENABLE_STOPWORDS_RATIO = False 
 
-DATA_OPENED = 0
-
 # Options for setting the maximum perplexity score
 USE_MAX_PERPLEXITY = True
 USER_DEF_MAX_PERPLEXITY = 5000
