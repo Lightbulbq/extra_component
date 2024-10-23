@@ -1,5 +1,12 @@
 # Run with: streamlit run visualization.py
 
+import config
+from filters.languages_id import langs_id
+from filters.filtering import LoadParameters, ModifyingDocuments, Filtering
+from pathlib import Path
+import sys
+import matplotlib.pyplot as plt
+import numpy as np
 import streamlit as st
 
 import os
@@ -12,20 +19,10 @@ import math
 
 pd.options.mode.chained_assignment = None
 
-import numpy as np
-
-import matplotlib.pyplot as plt
-
-import sys
-from pathlib import Path
 
 # Append the path of the parent directory to the python path
 # to find the files filtering.py and languages_id.py in the parent directory
 sys.path.append(str(Path(sys.path[0]).parent.absolute().parent.absolute()))
-
-from filters.filtering import LoadParameters, ModifyingDocuments, Filtering
-from filters.languages_id import langs_id
-import config
 
 
 class Visualization_for_lang:
@@ -51,10 +48,14 @@ class Visualization_for_lang:
         self.param = LoadParameters.load_parameters(lang_dataset_id)
         self.stopwords = LoadParameters.load_stopwords(lang_dataset_id)
         self.flagged_words = LoadParameters.load_flagged_words(lang_dataset_id)
-        self.model_lang_id = LoadParameters.load_model_lang_id(lang_dataset_id, path_fasttext_model)
-        self.sentencepiece_model = LoadParameters.load_sentencepiece_model(lang_dataset_id, path_sentencepiece_model)
-        self.sentencepiece_model_tok = self.sentencepiece_model if self.param["tokenization"] else None
-        self.kenlm_model = LoadParameters.load_kenlm_model(lang_dataset_id, path_kenlm_model)
+        self.model_lang_id = LoadParameters.load_model_lang_id(
+            lang_dataset_id, path_fasttext_model)
+        self.sentencepiece_model = LoadParameters.load_sentencepiece_model(
+            lang_dataset_id, path_sentencepiece_model)
+        self.sentencepiece_model_tok = self.sentencepiece_model if self.param[
+            "tokenization"] else None
+        self.kenlm_model = LoadParameters.load_kenlm_model(
+            lang_dataset_id, path_kenlm_model)
 
     def set_title(self):
         st.title(f"Filtering visualization for {self.lang}")
@@ -65,7 +66,8 @@ class Visualization_for_lang:
                 data = json.load(json_file)
 
         except json.JSONDecodeError as e:
-            raise ValueError("Error decoding JSON: The document is empty or not a valid JSON file.") from e
+            raise ValueError(
+                "Error decoding JSON: The document is empty or not a valid JSON file.") from e
 
         self.num_docs = min(self.num_docs, len(data))
         self.num_docs_for_words = min(self.num_docs_for_words, len(data))
@@ -93,16 +95,19 @@ class Visualization_for_lang:
 
     @staticmethod
     def print_discarded_by_cond(cond):
-        st.caption(f"{(len(cond) - np.sum(1*cond)) / len(cond) * 100:.2f}% of the total is discarded with this filter.")
+        st.caption(f"{(len(cond) - np.sum(1*cond)) / len(cond) *
+                   100:.2f}% of the total is discarded with this filter.")
 
     @staticmethod
     def plot_hist(dataframe, key, num_bins=50):
-        checkbox = st.checkbox("Diplay distribution", value=True, key=f"display_distribution_{key[0]}")
+        checkbox = st.checkbox("Diplay distribution",
+                               value=True, key=f"display_distribution_{key[0]}")
         if checkbox:
             fig, ax = plt.subplots()
             val = dataframe[key[0]].values
             if np.median(val) != 0:
-                val = val[abs(val - np.median(val)) < 9 * np.median(np.absolute(val - np.median(val)))]
+                val = val[abs(val - np.median(val)) < 9 *
+                          np.median(np.absolute(val - np.median(val)))]
             ax.hist(val, bins=num_bins, density=True)
             ax.set_title(" ".join(key[0].split("_")))
             ax.axvline(x=key[1], color="r", linestyle="dashed")
@@ -112,9 +117,11 @@ class Visualization_for_lang:
     def display_dataset(dataframe, cond, description, type_of_examples):
         displayed_examples = dataframe.loc[cond]
         st.subheader(
-            f"{description}: {len(displayed_examples)} {type_of_examples} ({len(displayed_examples) / len(dataframe.index) * 100:.2f}%)"
+            f"{description}: {len(displayed_examples)} {type_of_examples} ({
+                len(displayed_examples) / len(dataframe.index) * 100:.2f}%)"
         )
-        st.markdown("Click on a column to sort by it, place the cursor on the text to display it.")
+        st.markdown(
+            "Click on a column to sort by it, place the cursor on the text to display it.")
 
         # we use a variable to set the method for displaying the dataframe's columns
         hide_columns = config.USE_HIDE_SELECTED_COLS_METHOD
@@ -123,7 +130,8 @@ class Visualization_for_lang:
             columns_to_hide = config.SELECTED_COLS
             # Drop columns if they exist
             displayed_examples_edited = displayed_examples.drop(
-                columns=[col for col in columns_to_hide if col in displayed_examples.columns]
+                columns=[
+                    col for col in columns_to_hide if col in displayed_examples.columns]
             )
         else:
             # show only selected columns
@@ -160,14 +168,16 @@ class Visualization_for_lang:
                     max_nb_words = int(np.max(self.docs["number_tokens"])) + 1
 
                     # Text input for minimum number of tokens
-                    min_tokens_input = st.text_input("Enter minimum number of tokens", "0")
+                    min_tokens_input = st.text_input(
+                        "Enter minimum number of tokens", "0")
                     try:
                         min_tokens_value = int(min_tokens_input)
                     except ValueError:
                         min_tokens_value = 0
 
                     # Slider for minimum number of tokens
-                    cutoff_min_number_words = st.slider(cutoff_def, 0, min(max_nb_words, 500), min_tokens_value)
+                    cutoff_min_number_words = st.slider(
+                        cutoff_def, 0, min(max_nb_words, 500), min_tokens_value)
                     new_key = ("number_tokens", cutoff_min_number_words, False)
                     keys.append(new_key)
                     Visualization_for_lang.plot_hist(self.docs, new_key)
@@ -179,14 +189,16 @@ class Visualization_for_lang:
                     )
 
                     # Text input for maximum number of tokens
-                    max_tokens_input = st.text_input("Enter maximum number of tokens", str(max_nb_words))
+                    max_tokens_input = st.text_input(
+                        "Enter maximum number of tokens", str(max_nb_words))
                     try:
                         max_tokens_value = int(max_tokens_input)
                     except ValueError:
                         max_tokens_value = max_nb_words
 
                     # Slider for maximum number of tokens
-                    cutoff_max_number_words = st.slider(cutoff_def, 0, max_nb_words, max_tokens_value)
+                    cutoff_max_number_words = st.slider(
+                        cutoff_def, 0, max_nb_words, max_tokens_value)
                     new_key = ("number_tokens", cutoff_max_number_words, True)
                     keys.append(new_key)
                     cond_2 = get_cond(new_key[0], new_key[1], new_key[2])
@@ -196,8 +208,10 @@ class Visualization_for_lang:
 
             if "character_repetition_ratio" in columns:
                 with st.sidebar.expander("Character repetition ratio"):
-                    val_repetitions_lengths = list(self.docs["character_repetition_ratio"].iloc[0].keys())
-                    default_index = val_repetitions_lengths.index("10") if "10" in val_repetitions_lengths else 0
+                    val_repetitions_lengths = list(
+                        self.docs["character_repetition_ratio"].iloc[0].keys())
+                    default_index = val_repetitions_lengths.index(
+                        "10") if "10" in val_repetitions_lengths else 0
                     label_selectbox = (
                         "Length of repetitions in characters (that will influence the character repetition ratio)."
                     )
@@ -224,14 +238,16 @@ class Visualization_for_lang:
                     cutoff_def = "If the character repetition ratio of a document is higher than this number, the document is removed."
 
                     # Text input for character repetition ratio
-                    char_repetition_input = st.text_input("Enter character repetition ratio", "1.0")
+                    char_repetition_input = st.text_input(
+                        "Enter character repetition ratio", "1.0")
                     try:
                         char_repetition_value = float(char_repetition_input)
                     except ValueError:
                         char_repetition_value = 1.0
 
                     # Slider for character repetition ratio
-                    cutoff_character_repetition_ratio = st.slider(cutoff_def, 0.0, 1.0, char_repetition_value, step=0.01)
+                    cutoff_character_repetition_ratio = st.slider(
+                        cutoff_def, 0.0, 1.0, char_repetition_value, step=0.01)
                     new_key = (
                         "character_repetition_ratio",
                         cutoff_character_repetition_ratio,
@@ -246,8 +262,10 @@ class Visualization_for_lang:
 
             if "token_repetition_ratio" in columns:
                 with st.sidebar.expander("Token repetition ratio"):
-                    val_repetitions_lengths = list(self.docs["token_repetition_ratio"].iloc[0].keys())
-                    default_index = val_repetitions_lengths.index("5") if "5" in val_repetitions_lengths else 0
+                    val_repetitions_lengths = list(
+                        self.docs["token_repetition_ratio"].iloc[0].keys())
+                    default_index = val_repetitions_lengths.index(
+                        "5") if "5" in val_repetitions_lengths else 0
                     label_selectbox = (
                         "Length of repetitions in tokens (that will influence the token repetition ratio)."
                     )
@@ -273,14 +291,16 @@ class Visualization_for_lang:
                     cutoff_def = "If the token repetition ratio of a document is higher than this number, the document is removed."
 
                     # Text input for token repetition ratio
-                    token_repetition_input = st.text_input("Enter token repetition ratio", "1.0")
+                    token_repetition_input = st.text_input(
+                        "Enter token repetition ratio", "1.0")
                     try:
                         token_repetition_value = float(token_repetition_input)
                     except ValueError:
                         token_repetition_value = 1.0
 
                     # Slider for token repetition ratio
-                    cutoff_word_repetition_ratio = st.slider(cutoff_def, 0.0, 1.0, token_repetition_value, step=0.01)
+                    cutoff_word_repetition_ratio = st.slider(
+                        cutoff_def, 0.0, 1.0, token_repetition_value, step=0.01)
                     new_key = (
                         "token_repetition_ratio",
                         cutoff_word_repetition_ratio,
@@ -298,14 +318,17 @@ class Visualization_for_lang:
                     cutoff_def = "If the special characters ratio of a document is higher than this number, the document is removed."
 
                     # Text input for special characters ratio
-                    special_characters_input = st.text_input("Enter special characters ratio", "1.0")
+                    special_characters_input = st.text_input(
+                        "Enter special characters ratio", "1.0")
                     try:
-                        special_characters_value = float(special_characters_input)
+                        special_characters_value = float(
+                            special_characters_input)
                     except ValueError:
                         special_characters_value = 1.0
 
                     # Slider for special characters ratio
-                    cutoff_special_characters_ratio = st.slider(cutoff_def, 0.0, 1.0, special_characters_value, step=0.01)
+                    cutoff_special_characters_ratio = st.slider(
+                        cutoff_def, 0.0, 1.0, special_characters_value, step=0.01)
                     new_key = (
                         "special_characters_ratio",
                         cutoff_special_characters_ratio,
@@ -327,8 +350,10 @@ class Visualization_for_lang:
                             "Upload your own list of flagged words (one per line). If there is none, the default one is used."
                         )
                         if flagged_words_file:
-                            new_flagged_words = StringIO(flagged_words_file.getvalue().decode("utf-8")).read()
-                            new_flagged_words = set(new_flagged_words.split("\n"))
+                            new_flagged_words = StringIO(
+                                flagged_words_file.getvalue().decode("utf-8")).read()
+                            new_flagged_words = set(
+                                new_flagged_words.split("\n"))
                             self.docs["flagged_words_ratio"] = self.docs_checkpoint["flagged_words_ratio"]
                             for i in range(len(self.docs["flagged_words_ratio"])):
                                 self.docs["flagged_words_ratio"].iloc[i] = Filtering.compute_flagged_words_ratio(
@@ -347,7 +372,8 @@ class Visualization_for_lang:
                         )
                         if flagged_words_file:
                             new_flagged_words = flagged_words_file
-                            new_flagged_words = set(new_flagged_words.split(","))
+                            new_flagged_words = set(
+                                new_flagged_words.split(","))
                             self.docs["flagged_words_ratio"] = self.docs_checkpoint["flagged_words_ratio"]
                             for i in range(len(self.docs["flagged_words_ratio"])):
                                 self.docs.loc[i, "flagged_words_ratio"] = Filtering.compute_flagged_words_ratio(
@@ -365,12 +391,15 @@ class Visualization_for_lang:
                     )
                     max_fwr = np.max(self.docs["flagged_words_ratio"])
                     max_fwr = float(np.ceil(max_fwr * 1000) / 1000)
-                    max_fwr = 1.0 if math.isclose(max_fwr, 0.0, abs_tol=1e-9) else (max_fwr + 0.001)
+                    max_fwr = 1.0 if math.isclose(
+                        max_fwr, 0.0, abs_tol=1e-9) else (max_fwr + 0.001)
 
                     # Text input for flagged words ratio
-                    flagged_words_ratio_input = st.text_input("Enter flagged words ratio", str(max_fwr))
+                    flagged_words_ratio_input = st.text_input(
+                        "Enter flagged words ratio", str(max_fwr))
                     try:
-                        flagged_words_ratio_value = float(flagged_words_ratio_input)
+                        flagged_words_ratio_value = float(
+                            flagged_words_ratio_input)
                     except ValueError:
                         flagged_words_ratio_value = max_fwr
 
@@ -383,7 +412,8 @@ class Visualization_for_lang:
                         step=0.001,
                         format="%f",
                     )
-                    new_key = ("flagged_words_ratio", cutoff_flagged_words_ratio, True)
+                    new_key = ("flagged_words_ratio",
+                               cutoff_flagged_words_ratio, True)
                     keys.append(new_key)
                     Visualization_for_lang.plot_hist(self.docs, new_key)
                     cond = get_cond(new_key[0], new_key[1], new_key[2])
@@ -396,7 +426,8 @@ class Visualization_for_lang:
                         "Upload your own list of stop words (one per line). If there is none, the default one is used."
                     )
                     if stopwords_file:
-                        new_stopwords = StringIO(stopwords_file.getvalue().decode("utf-8")).read()
+                        new_stopwords = StringIO(
+                            stopwords_file.getvalue().decode("utf-8")).read()
                         new_stopwords = set(new_stopwords.split("\n"))
                         self.docs["stopwords_ratio"] = self.docs_checkpoint["stopwords_ratio"]
                         for i in range(len(self.docs["stopwords_ratio"])):
@@ -433,15 +464,18 @@ class Visualization_for_lang:
                     )
 
                     # Text input for stop words ratio
-                    stopwords_ratio_input = st.text_input("Enter stop words ratio", "0.0")
+                    stopwords_ratio_input = st.text_input(
+                        "Enter stop words ratio", "0.0")
                     try:
                         stopwords_ratio_value = float(stopwords_ratio_input)
                     except ValueError:
                         stopwords_ratio_value = 0.0
 
                     # Slider for stop words ratio
-                    cutoff_stopwords_ratio = st.slider(cutoff_def, 0.0, 1.0, stopwords_ratio_value, step=0.01)
-                    new_key = ("stopwords_ratio", cutoff_stopwords_ratio, False)
+                    cutoff_stopwords_ratio = st.slider(
+                        cutoff_def, 0.0, 1.0, stopwords_ratio_value, step=0.01)
+                    new_key = ("stopwords_ratio",
+                               cutoff_stopwords_ratio, False)
                     keys.append(new_key)
                     Visualization_for_lang.plot_hist(self.docs, new_key)
                     cond = get_cond(new_key[0], new_key[1], new_key[2])
@@ -453,14 +487,16 @@ class Visualization_for_lang:
                     cutoff_def = "If the confidence score for the language identification prediction of a document is lower than this number, the document is removed."
 
                     # Text input for language ID confidence score
-                    lang_id_score_input = st.text_input("Enter language ID confidence score", "0.0")
+                    lang_id_score_input = st.text_input(
+                        "Enter language ID confidence score", "0.0")
                     try:
                         lang_id_score_value = float(lang_id_score_input)
                     except ValueError:
                         lang_id_score_value = 0.0
 
                     # Slider for language ID confidence score
-                    cutoff_lang_id_score = st.slider(cutoff_def, 0.0, 1.0, lang_id_score_value, step=0.01)
+                    cutoff_lang_id_score = st.slider(
+                        cutoff_def, 0.0, 1.0, lang_id_score_value, step=0.01)
                     new_key = ("lang_id_score", cutoff_lang_id_score, False)
                     keys.append(new_key)
                     Visualization_for_lang.plot_hist(self.docs, new_key)
@@ -479,25 +515,30 @@ class Visualization_for_lang:
                         max_pp = config.USER_DEF_MAX_PERPLEXITY
 
                     # Text input for perplexity score
-                    perplexity_score_input = st.text_input("Enter perplexity score", str(max_pp))
+                    perplexity_score_input = st.text_input(
+                        "Enter perplexity score", str(max_pp))
                     try:
                         perplexity_score_value = int(perplexity_score_input)
                     except ValueError:
                         perplexity_score_value = max_pp
 
                     # Slider for perplexity score
-                    cutoff_perplexity_score = st.slider(cutoff_def, 0, max_pp, perplexity_score_value)
-                    new_key = ("perplexity_score", cutoff_perplexity_score, True)
+                    cutoff_perplexity_score = st.slider(
+                        cutoff_def, 0, max_pp, perplexity_score_value)
+                    new_key = ("perplexity_score",
+                               cutoff_perplexity_score, True)
                     keys.append(new_key)
                     Visualization_for_lang.plot_hist(self.docs, new_key)
-                    cond = get_cond(new_key[0], new_key[1], new_key[2], max_pp=max_pp)
+                    cond = get_cond(
+                        new_key[0], new_key[1], new_key[2], max_pp=max_pp)
                     Visualization_for_lang.print_discarded_by_cond(cond)
                     conds["perplexity_score"] = [cond]
 
             return keys, conds
 
         with st.expander(f"Filtering on documents, for {self.num_docs} {self.lang} documents"):
-            st.header(f"Filtering on documents, for {self.num_docs} {self.lang} documents")
+            st.header(f"Filtering on documents, for {
+                      self.num_docs} {self.lang} documents")
 
             if "labels" in list(self.docs):
                 chosen_label = st.selectbox(
@@ -516,32 +557,39 @@ class Visualization_for_lang:
                 )
                 chosen_label = chosen_label.split(":")[0]
                 if chosen_label != "All":
-                    cond_label = list(self.docs["labels"].apply(lambda x: True if chosen_label in x else False))
+                    cond_label = list(self.docs["labels"].apply(
+                        lambda x: True if chosen_label in x else False))
                     self.docs = self.docs[cond_label]
 
             if self.docs.empty:
-                st.markdown("No document to display, please try to select a different label.")
+                st.markdown(
+                    "No document to display, please try to select a different label.")
                 self.keys = []
                 self.parameters = []
 
             else:
-                st.sidebar.subheader("Parameters of the filtering on documents")
+                st.sidebar.subheader(
+                    "Parameters of the filtering on documents")
                 self.keys, conds = set_sliders()
                 self.parameters = self.keys * 1
 
-                all_conds = [subcond for cond in list(conds.values()) for subcond in cond]
+                all_conds = [subcond for cond in list(
+                    conds.values()) for subcond in cond]
                 all_conds = np.all(all_conds, axis=0)
 
-                Visualization_for_lang.display_dataset(self.docs, np.invert(all_conds), "Discarded documents", "docs")
+                Visualization_for_lang.display_dataset(
+                    self.docs, np.invert(all_conds), "Discarded documents", "docs")
 
                 # st.subheader("Display discarded documents by filter")
-                display_discarded_documents_by_filter = st.checkbox("Display discarded documents by filter")
+                display_discarded_documents_by_filter = st.checkbox(
+                    "Display discarded documents by filter")
 
                 if display_discarded_documents_by_filter:
                     columns = list(self.docs)
 
                     if "number_tokens" in columns:
-                        cond_filter = np.invert(np.all(conds["number_tokens"], axis=0))
+                        cond_filter = np.invert(
+                            np.all(conds["number_tokens"], axis=0))
                         Visualization_for_lang.display_dataset(
                             self.docs,
                             cond_filter,
@@ -550,7 +598,8 @@ class Visualization_for_lang:
                         )
 
                     if "character_repetition_ratio" in columns:
-                        cond_filter = np.invert(np.all(conds["character_repetition_ratio"], axis=0))
+                        cond_filter = np.invert(
+                            np.all(conds["character_repetition_ratio"], axis=0))
                         Visualization_for_lang.display_dataset(
                             self.docs,
                             cond_filter,
@@ -559,7 +608,8 @@ class Visualization_for_lang:
                         )
 
                     if "token_repetition_ratio" in columns:
-                        cond_filter = np.invert(np.all(conds["token_repetition_ratio"], axis=0))
+                        cond_filter = np.invert(
+                            np.all(conds["token_repetition_ratio"], axis=0))
                         Visualization_for_lang.display_dataset(
                             self.docs,
                             cond_filter,
@@ -568,7 +618,8 @@ class Visualization_for_lang:
                         )
 
                     if "special_characters_ratio" in columns:
-                        cond_filter = np.invert(np.all(conds["special_characters_ratio"], axis=0))
+                        cond_filter = np.invert(
+                            np.all(conds["special_characters_ratio"], axis=0))
                         Visualization_for_lang.display_dataset(
                             self.docs,
                             cond_filter,
@@ -577,7 +628,8 @@ class Visualization_for_lang:
                         )
 
                     if "stopwords_ratio" in columns:
-                        cond_filter = np.invert(np.all(conds["stopwords_ratio"], axis=0))
+                        cond_filter = np.invert(
+                            np.all(conds["stopwords_ratio"], axis=0))
                         Visualization_for_lang.display_dataset(
                             self.docs,
                             cond_filter,
@@ -586,7 +638,8 @@ class Visualization_for_lang:
                         )
 
                     if "flagged_words_ratio" in columns:
-                        cond_filter = np.invert(np.all(conds["flagged_words_ratio"], axis=0))
+                        cond_filter = np.invert(
+                            np.all(conds["flagged_words_ratio"], axis=0))
                         Visualization_for_lang.display_dataset(
                             self.docs,
                             cond_filter,
@@ -595,7 +648,8 @@ class Visualization_for_lang:
                         )
 
                     if "lang_id_score" in columns:
-                        cond_filter = np.invert(np.all(conds["lang_id_score"], axis=0))
+                        cond_filter = np.invert(
+                            np.all(conds["lang_id_score"], axis=0))
                         Visualization_for_lang.display_dataset(
                             self.docs,
                             cond_filter,
@@ -604,7 +658,8 @@ class Visualization_for_lang:
                         )
 
                     if "perplexity_score" in columns:
-                        cond_filter = np.invert(np.all(conds["perplexity_score"], axis=0))
+                        cond_filter = np.invert(
+                            np.all(conds["perplexity_score"], axis=0))
                         Visualization_for_lang.display_dataset(
                             self.docs,
                             cond_filter,
@@ -612,7 +667,8 @@ class Visualization_for_lang:
                             "docs",
                         )
 
-                Visualization_for_lang.display_dataset(self.docs, all_conds, "Retained documents", "docs")
+                Visualization_for_lang.display_dataset(
+                    self.docs, all_conds, "Retained documents", "docs")
 
             st.header("Download data")
 
@@ -634,19 +690,24 @@ class Visualization_for_lang:
             if "len_word" in columns:
                 with st.sidebar.expander("Length of words"):
                     cutoff_def = "If the length of a word is higher than this number, the word is removed."
-                    max_len_word = min(int(np.max(self.words["len_word"])) + 1, 200)
-                    cutoff_word = st.slider(cutoff_def, 0, max_len_word, max_len_word)
+                    max_len_word = min(
+                        int(np.max(self.words["len_word"])) + 1, 200)
+                    cutoff_word = st.slider(
+                        cutoff_def, 0, max_len_word, max_len_word)
                     new_key = ("len_word", cutoff_word, True)
                     self.parameters.append(new_key)
                     Visualization_for_lang.plot_hist(self.words, new_key)
                     cond_len_words = self.words["len_word"] <= cutoff_word
-                    Visualization_for_lang.print_discarded_by_cond(cond_len_words)
+                    Visualization_for_lang.print_discarded_by_cond(
+                        cond_len_words)
                     conds_words["len_word"] = cond_len_words
 
             if "incorrect_substrings" in columns:
                 with st.sidebar.expander("Words with incorrect substrings"):
-                    incorrect_substrings = st.checkbox("Remove words with incorrect substrings.")
-                    self.parameters.append(("incorrect_substrings", incorrect_substrings))
+                    incorrect_substrings = st.checkbox(
+                        "Remove words with incorrect substrings.")
+                    self.parameters.append(
+                        ("incorrect_substrings", incorrect_substrings))
 
                     checkbox = st.checkbox(
                         "Diplay distribution",
@@ -654,37 +715,47 @@ class Visualization_for_lang:
                         key="display_distribution_incorrect_substrings",
                     )
                     if checkbox:
-                        incor_sub = np.array(self.words["incorrect_substrings"]) * 1
+                        incor_sub = np.array(
+                            self.words["incorrect_substrings"]) * 1
                         with_incor_sub = np.sum(incor_sub)
                         without_incor_sub = len(incor_sub) - with_incor_sub
-                        st.markdown(f"Number of words with incorrect substrings: {with_incor_sub}")
-                        st.markdown(f"Number of words without incorrect substrings: {without_incor_sub}")
+                        st.markdown(f"Number of words with incorrect substrings: {
+                                    with_incor_sub}")
+                        st.markdown(f"Number of words without incorrect substrings: {
+                                    without_incor_sub}")
 
                     if incorrect_substrings:
-                        cond_incorrect_substrings = np.invert(self.words["incorrect_substrings"])
+                        cond_incorrect_substrings = np.invert(
+                            self.words["incorrect_substrings"])
                     else:
                         cond_incorrect_substrings = np.array(
-                            [True for i in range(len(self.words["incorrect_substrings"]))]
+                            [True for i in range(
+                                len(self.words["incorrect_substrings"]))]
                         )
-                    Visualization_for_lang.print_discarded_by_cond(cond_incorrect_substrings)
+                    Visualization_for_lang.print_discarded_by_cond(
+                        cond_incorrect_substrings)
                     conds_words["incorrect_substrings"] = cond_incorrect_substrings
 
             all_conds_words = np.all(list(conds_words.values()), axis=0)
 
             with st.expander(f"Filtering on words, for {self.num_docs_for_words} {self.lang} documents"):
-                st.header(f"Filtering on words, for {self.num_docs_for_words} {self.lang} documents")
+                st.header(f"Filtering on words, for {
+                          self.num_docs_for_words} {self.lang} documents")
 
                 st.markdown(
                     f"Since the number of words is way larger than the number of documents, "
-                    f"we consider in this section words for only {self.num_docs_for_words} documents."
+                    f"we consider in this section words for only {
+                        self.num_docs_for_words} documents."
                 )
 
                 Visualization_for_lang.display_dataset(
-                    self.words, np.invert(all_conds_words), "Discarded words", "words"
+                    self.words, np.invert(
+                        all_conds_words), "Discarded words", "words"
                 )
 
                 # st.subheader("Display discarded words by filter")
-                display_discarded_words_by_filter = st.checkbox("Display discarded words by filter")
+                display_discarded_words_by_filter = st.checkbox(
+                    "Display discarded words by filter")
 
                 if display_discarded_words_by_filter:
 
@@ -698,7 +769,8 @@ class Visualization_for_lang:
                         )
 
                     if "incorrect_substrings" in columns:
-                        cond_filter = np.invert(conds_words["incorrect_substrings"])
+                        cond_filter = np.invert(
+                            conds_words["incorrect_substrings"])
                         Visualization_for_lang.display_dataset(
                             self.words,
                             cond_filter,
@@ -706,7 +778,8 @@ class Visualization_for_lang:
                             "words",
                         )
 
-                Visualization_for_lang.display_dataset(self.words, all_conds_words, "Retained words", "words")
+                Visualization_for_lang.display_dataset(
+                    self.words, all_conds_words, "Retained words", "words")
 
     def filtering_of_sentences(self):
         def set_sliders():
@@ -727,7 +800,8 @@ class Visualization_for_lang:
                     max_pp = int(np.max(self.docs["perplexity_score"])) + 1
                 else:
                     max_pp = config.USER_DEF_MAX_PERPLEXITY
-                cutoff_perplexity_score = st.slider(cutoff_def, 0, max_pp, max_pp)
+                cutoff_perplexity_score = st.slider(
+                    cutoff_def, 0, max_pp, max_pp)
                 new_key = ("ppl", cutoff_perplexity_score, True)
                 keys.append(new_key)
                 Visualization_for_lang.plot_hist(self.sentences, new_key)
@@ -742,15 +816,19 @@ class Visualization_for_lang:
         keys, conds = set_sliders()
         # self.parameters = keys * 1
 
-        all_conds = [subcond for cond in list(conds.values()) for subcond in cond]
+        all_conds = [subcond for cond in list(
+            conds.values()) for subcond in cond]
         all_conds = np.all(all_conds, axis=0)
 
         with st.expander(f"Filtering on sentences, for {self.num_docs_for_sents} {self.lang} documents"):
-            st.header(f"Filtering on sentences, for {self.num_docs_for_sents} {self.lang} documents")
+            st.header(f"Filtering on sentences, for {
+                      self.num_docs_for_sents} {self.lang} documents")
 
-            Visualization_for_lang.display_dataset(self.sentences, np.invert(all_conds), "Discarded sentences", "sents")
+            Visualization_for_lang.display_dataset(
+                self.sentences, np.invert(all_conds), "Discarded sentences", "sents")
 
-            Visualization_for_lang.display_dataset(self.sentences, all_conds, "Retained sentences", "sents")
+            Visualization_for_lang.display_dataset(
+                self.sentences, all_conds, "Retained sentences", "sents")
 
     def download_parameters(self):
         st.sidebar.subheader("Download parameters")
@@ -822,8 +900,10 @@ class Visualization_for_lang:
                         character_repetition_ratio = Filtering.compute_character_repetition_ratio(
                             personal_doc, int(key[3])
                         )
-                        character_repetition_ratio = round(character_repetition_ratio, 3)
-                        st.markdown(f"Character repetition ratio: {character_repetition_ratio}")
+                        character_repetition_ratio = round(
+                            character_repetition_ratio, 3)
+                        st.markdown(f"Character repetition ratio: {
+                                    character_repetition_ratio}")
                         if is_doc_discarded(key, character_repetition_ratio):
                             is_discarded = True
 
@@ -835,7 +915,8 @@ class Visualization_for_lang:
                             int(key[3]),
                         )
                         word_repetition_ratio = round(word_repetition_ratio, 3)
-                        st.markdown(f"Token repetition ratio: {word_repetition_ratio}")
+                        st.markdown(f"Token repetition ratio: {
+                                    word_repetition_ratio}")
                         if is_doc_discarded(key, word_repetition_ratio):
                             is_discarded = True
 
@@ -843,8 +924,10 @@ class Visualization_for_lang:
                         special_characters_ratio = Filtering.compute_special_characters_ratio(
                             personal_doc, self.param["special_characters"]
                         )
-                        special_characters_ratio = round(special_characters_ratio, 3)
-                        st.markdown(f"Special characters ratio: {special_characters_ratio}")
+                        special_characters_ratio = round(
+                            special_characters_ratio, 3)
+                        st.markdown(f"Special characters ratio: {
+                                    special_characters_ratio}")
                         if is_doc_discarded(key, special_characters_ratio):
                             is_discarded = True
 
@@ -874,7 +957,8 @@ class Visualization_for_lang:
                             self.flagged_words,
                         )
                         flagged_words_ratio = round(flagged_words_ratio, 3)
-                        st.markdown(f"Flagged words ratio: {flagged_words_ratio}")
+                        st.markdown(f"Flagged words ratio: {
+                                    flagged_words_ratio}")
                         if is_doc_discarded(key, flagged_words_ratio):
                             is_discarded = True
 
@@ -884,7 +968,8 @@ class Visualization_for_lang:
                             lang_id_score,
                         ) = Filtering.compute_lang_id_pred_score(personal_doc, self.model_lang_id)
                         lang_id_score = round(lang_id_score, 3)
-                        st.markdown(f"Language identification confidence score: {lang_id_score}")
+                        st.markdown(f"Language identification confidence score: {
+                                    lang_id_score}")
                         if is_doc_discarded(key, lang_id_score) or (self.lang_dataset_id != lang_pred_dataset_id):
                             is_discarded = True
 
@@ -900,7 +985,8 @@ class Visualization_for_lang:
                             is_discarded = True
 
                 is_discarded = "" if is_discarded else "not "
-                st.markdown(f"With the current filtering parameters, this document **is {is_discarded}discarded**.")
+                st.markdown(
+                    f"With the current filtering parameters, this document **is {is_discarded}discarded**.")
 
     def visualization_for_lang(self):
         self.set_title()
@@ -919,7 +1005,8 @@ class Visualization:
             with open(bin_file, "rb") as f:
                 data = f.read()
             bin_str = base64.b64encode(data).decode()
-            href = f'<a href="data:application/octet-stream;base64,{bin_str}" download="{os.path.basename(bin_file)}">{file_label}</a>'
+            href = f'<a href="data:application/octet-stream;base64,{
+                bin_str}" download="{os.path.basename(bin_file)}">{file_label}</a>'
             return href
 
         st.markdown(
@@ -942,8 +1029,9 @@ class Visualization:
         )
 
     def choose_lang(self):
-        options = config.FILES_IN_GENERATED_SIGNALS_DIR 
-        lang_chosen = st.selectbox("Select the file for visualization", options)
+        options = config.FILES_IN_GENERATED_SIGNALS_DIR
+        lang_chosen = st.selectbox(
+            "Select the file for visualization", options)
 
         if lang_chosen != "None":
             lang_chosen_value = lang_chosen.split('/')[-1]
@@ -951,55 +1039,64 @@ class Visualization:
 
             if lang_chosen_dataset_id not in config.LANG_IDS:
                 config.LANG_IDS.append(lang_chosen_dataset_id)
-            st.session_state.lang_chosen = lang_chosen 
+            st.session_state.lang_chosen = lang_chosen
 
     def visualization(self):
         # Check if the language has been selected
         if 'lang_chosen' in st.session_state:
-            lang_chosen = st.session_state.lang_chosen  
+            lang_chosen = st.session_state.lang_chosen
+            # ensure that sub folder does not affect the loading of file
             lang_chosen_value = lang_chosen.split('/')[-1]
+            # set the language data set in readme
             lang_dataset_id = lang_chosen_value[0:2]
-
 
             # Exit if the file is not valid
             if not lang_chosen.endswith('.json'):
                 st.error("The selected file is not a valid JSON file.")
-                
+
             # Load your parameters based on the selected language
             if lang_dataset_id in config.LANGS_SET:
                 kenlm_path = config.KENLM_PATH
                 path_fasttext_model = config.FASTTEXT_MODEL_PATH
-                path_sentencepiece_model = os.path.join(kenlm_path, f"{lang_dataset_id}.sp.model")
-                path_kenlm_model = os.path.join(kenlm_path, f"{lang_dataset_id}.arpa.bin")
+                path_sentencepiece_model = os.path.join(
+                    kenlm_path, f"{lang_dataset_id}.sp.model")
+                path_kenlm_model = os.path.join(
+                    kenlm_path, f"{lang_dataset_id}.arpa.bin")
 
                 # Check if the FastText model exists
                 if not os.path.exists(path_fasttext_model):
-                    raise FileNotFoundError(f"FastText model not found at {path_fasttext_model}.")
+                    raise FileNotFoundError(f"FastText model not found at {
+                                            path_fasttext_model}.")
 
                 # Check if the SentencePiece model exists
                 if not os.path.exists(path_sentencepiece_model):
-                    raise FileNotFoundError(f"SentencePiece model not found at {path_sentencepiece_model}.")
+                    raise FileNotFoundError(f"SentencePiece model not found at {
+                                            path_sentencepiece_model}.")
 
                 # Check if the KenLM model exists
                 if not os.path.exists(path_kenlm_model):
-                    raise FileNotFoundError(f"KenLM model not found at {path_kenlm_model}.")
+                    raise FileNotFoundError(
+                        f"KenLM model not found at {path_kenlm_model}.")
 
                 # If all models are found, continue setting parameters
                 visualization_for_lang = Visualization_for_lang(
-                    path_data= os.path.join(config.GENERATED_SIGNALS_DIR, lang_chosen),
-                    lang= langs_id.loc[langs_id["dataset_id"] == lang_dataset_id, "lang"].iloc[0],
-                    num_docs= config.NUM_DATA_SAMPLES,
-                    num_docs_for_words= config.NUM_DATA_SAMPLES,
-                    max_len_text_display= 10000,
+                    path_data=os.path.join(
+                        config.GENERATED_SIGNALS_DIR, lang_chosen),
+                    lang=langs_id.loc[langs_id["dataset_id"]
+                                      == lang_dataset_id, "lang"].iloc[0],
+                    num_docs=config.NUM_DATA_SAMPLES,
+                    num_docs_for_words=config.NUM_DATA_SAMPLES,
+                    max_len_text_display=10000,
                     lang_dataset_id=lang_dataset_id,
-                    path_fasttext_model= path_fasttext_model,
-                    path_sentencepiece_model= path_sentencepiece_model,
-                    path_kenlm_model= path_kenlm_model,
+                    path_fasttext_model=path_fasttext_model,
+                    path_sentencepiece_model=path_sentencepiece_model,
+                    path_kenlm_model=path_kenlm_model,
                 )
 
                 visualization_for_lang.visualization_for_lang()
             else:
                 st.error(f"Please use a correct lang_id: {lang_dataset_id}")
+
 
 if __name__ == "__main__":
     st.set_page_config(layout="wide")
