@@ -1,0 +1,11 @@
+services:
+  qsviz-app:
+    restart: unless-stopped
+    build: .
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+    env_file:
+      - .env
