@@ -21,8 +21,8 @@ WORKDIR /app
 
 COPY . .
 
-EXPOSE 5501
+EXPOSE 8501
 
-HEALTHCHECK CMD curl --fail http://localhost:5501/_stcore/health
+HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
 
-ENTRYPOINT ["streamlit", "run", "visualization/visualization.py", "--server.port=8501", "--server.address=0.0.0.0"]
+ENTRYPOINT ["streamlit", "run", "main.py", "--server.port=8501", "--server.address=0.0.0.0"]

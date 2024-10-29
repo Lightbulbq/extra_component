@@ -28,7 +28,6 @@ from filters.languages_id import langs_id
 import config
 
 
-x = 0
 class Visualization_for_lang:
     def __init__(
         self,
@@ -1052,13 +1051,19 @@ class Visualization:
         # else:
         #     st.warning("Please select a language to continue.")
 
-if __name__ == "__main__":
-    st.set_page_config(layout="wide")
+        
+def load_visualization():
     path_instructions = config.INSTRUCTIONS_PDF_PATH
     param_visu_langs = {}
     visualization_instance = Visualization(path_instructions, param_visu_langs)
     visualization_instance.choose_lang()
     visualization_instance.visualization()
+            
+
+if __name__ == "__main__":
+    st.set_page_config(layout="wide")
+    load_visualization()
+    
     
     
     

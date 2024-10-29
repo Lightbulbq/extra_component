@@ -2,6 +2,11 @@
 
 This visualization tool is adapted from this: https://huggingface.co/spaces/huggingface/text-data-filtering.
 
+## Configuration
+Create a file named `secrets.toml` under the `.streamlit` directory and copy the contents from `secrets.toml.example`. 
+
+If authentication is required, follow the instructions in [README_AUTH.MD](README_AUTH.md) on how to setup the necessary framework
+
 ## Getting Started
 ### Environment setup
 1. Create the conda environment
@@ -59,10 +64,10 @@ Similar to the fomat below  e.g. `en_[name_of_file].json`:
 
 ### Running the application
 
-Finally, run the streamlit app by running `visualization.py`:
+Finally, run the streamlit app by running `main.py`:
 
 ```bash
-streamlit run visualization/visualization.py
+streamlit run main.py
 ```
 
 ## Quick Start with Docker
@@ -70,7 +75,6 @@ streamlit run visualization/visualization.py
 Pre-requisites:
 1. Model(s) have been setup as described above under `Model(s) setup`
 2. Stats file containing quality signals have been generated as described above under `Data setup`
- = os.path.join(DATA_DIR, "8days_dedup.jsonl")
 3. `TRAIN_DATA_PATH` variable under `config.py` is configured to point to a valid file under `data/datasets`
 
 To launch the app with Docker, run
