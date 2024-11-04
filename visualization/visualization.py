@@ -281,8 +281,7 @@ class Visualization_for_lang:
                     cutoff_def = "If the character repetition ratio of a document is higher than this number, the document is removed."
 
                     # Text input for character repetition ratio
-                    char_repetition_input = st.text_input(
-                        "Enter character repetition ratio", "1.0")
+                    char_repetition_input = st.text_input("Enter character repetition ratio", "1.0")
                     try:
                         char_repetition_value = float(char_repetition_input)
                     except ValueError:
@@ -400,8 +399,7 @@ class Visualization_for_lang:
                                 )
                     else:
                         # code that uses text input instead of file upload
-                        flagged_words_file = st.text_input("Enter flagged words, separated by a comma (,), eg: hello,world."
-                        )
+                        flagged_words_file = st.text_input("Enter flagged words, separated by a comma (,), eg: hello,world.")
                         if flagged_words_file:
                             new_flagged_words = flagged_words_file
                             new_flagged_words = set(new_flagged_words.split(","))
@@ -422,8 +420,7 @@ class Visualization_for_lang:
                     )
                     max_fwr = np.max(self.docs["flagged_words_ratio"])
                     max_fwr = float(np.ceil(max_fwr * 1000) / 1000)
-                    max_fwr = 1.0 if math.isclose(
-                        max_fwr, 0.0, abs_tol=1e-9) else (max_fwr + 0.001)
+                    max_fwr = 1.0 if math.isclose(max_fwr, 0.0, abs_tol=1e-9) else (max_fwr + 0.001)
 
                     # Text input for flagged words ratio
                     flagged_words_ratio_input = st.text_input("Enter flagged words ratio", str(max_fwr))
@@ -578,8 +575,7 @@ class Visualization_for_lang:
                     self.docs = self.docs[cond_label]
 
             if self.docs.empty:
-                st.markdown(
-                    "No document to display, please try to select a different label.")
+                st.markdown("No document to display, please try to select a different label.")
                 self.keys = []
                 self.parameters = []
 
