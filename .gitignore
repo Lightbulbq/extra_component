@@ -173,3 +173,6 @@ lid.176.bin
 # datasets
 data/*/*.json
 data/*/*.jsonl
+
+# streamlit secrets
+.streamlit/secrets.toml
