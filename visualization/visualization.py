@@ -1,12 +1,3 @@
-# Run with: streamlit run visualization.py
-
-import config
-from filters.languages_id import langs_id
-from filters.filtering import LoadParameters, ModifyingDocuments, Filtering
-from pathlib import Path
-import sys
-import matplotlib.pyplot as plt
-import numpy as np
 import streamlit as st
 
 import os
@@ -19,10 +10,21 @@ import math
 
 pd.options.mode.chained_assignment = None
 
+import numpy as np
+
+import matplotlib.pyplot as plt
+
+import sys
+from pathlib import Path
 
 # Append the path of the parent directory to the python path
 # to find the files filtering.py and languages_id.py in the parent directory
 sys.path.append(str(Path(sys.path[0]).parent.absolute().parent.absolute()))
+
+from filters.filtering import LoadParameters, ModifyingDocuments, Filtering
+from filters.languages_id import langs_id
+import config
+
 
 
 class Visualization_for_lang:
@@ -62,8 +64,10 @@ class Visualization_for_lang:
 
     def open_data(self):
         try:
-            with open(self.path_data) as json_file:
-                data = json.load(json_file)
+            if 'json_data' not in st.session_state:
+                with open(self.path_data) as json_file:
+                    st.session_state.json_data = json.load(json_file) 
+            data = st.session_state.json_data
 
         except json.JSONDecodeError as e:
             raise ValueError(
@@ -90,8 +94,37 @@ class Visualization_for_lang:
                     doc["text"][: self.max_len_text_display]
                     + " [...] [THIS LONG TEXT HAS BEEN TRUNCATED FOR DISPLAY REASONS]"
                 )
+
+
+
         self.docs_checkpoint = pd.DataFrame(docs)
+
+        self.docs_checkpoint["id"] = range(len(self.docs_checkpoint))
+        # Arranging the order of columns 
+        self.docs_checkpoint = self.docs_checkpoint[[
+            "id", "number_tokens", "character_repetition_ratio", "token_repetition_ratio",
+            "special_characters_ratio", "flagged_words_ratio", "lang_id_score",
+            "perplexity_score", "text", "annotation"
+        ]]
+
+        # Initialize annotation data if not in session 
+        if "annotation_data" not in st.session_state:
+            st.session_state["annotation_data"] = self.docs_checkpoint[["id", "annotation"]].set_index("id")["annotation"].to_dict()
+
+
         self.docs = self.docs_checkpoint
+
+    @staticmethod
+    def highlight_non_rows(row):
+        styles = []
+        for col in row.index:
+            if row['annotation'] == "retain":
+                styles.append('background-color: rgba(57, 91, 59, 0.6)')  # Green for retain
+            elif row['annotation'] == "discard":
+                styles.append('background-color: rgba(110, 14, 14, 0.4)')  # Red for discard
+            else:
+                styles.append('')  # No highlight for other rows
+        return styles
 
     @staticmethod
     def print_discarded_by_cond(cond):
@@ -141,8 +174,40 @@ class Visualization_for_lang:
                 else displayed_examples
             )
 
-        # This line displays the dataframe
-        st.dataframe(displayed_examples_edited, use_container_width=True)
+
+        # Apply session-stored annotations
+        for idx, row in displayed_examples_edited.iterrows():
+            unique_id = row["id"]
+            if unique_id in st.session_state["annotation_data"]:
+                displayed_examples_edited.at[idx, "annotation"] = st.session_state["annotation_data"][unique_id]
+
+        # Applying highlight to row based on annotation value
+        df_styled = displayed_examples_edited.style.apply(Visualization_for_lang.highlight_non_rows, axis=1)
+
+
+        # only disabled columns will display styling
+        edited_df = st.data_editor(df_styled, hide_index=True,use_container_width=True, column_config={
+            "id": st.column_config.NumberColumn(disabled=True),
+            "number_tokens": st.column_config.NumberColumn(disabled=True),
+            "character_repetition_ratio": st.column_config.NumberColumn(disabled=True),
+            "token_repetition_ratio": st.column_config.NumberColumn(disabled=True),
+            "special_characters_ratio":st.column_config.NumberColumn(disabled=True),
+            "flagged_words_ratio": st.column_config.NumberColumn(disabled=True),
+            "lang_id_score": st.column_config.NumberColumn(disabled=True),
+            "perplexity_score": st.column_config.NumberColumn(disabled=True),
+            "text":st.column_config.TextColumn(disabled=True),
+            "annotation": st.column_config.SelectboxColumn(
+                options=['retain','discard'],  # Provide annotation options
+            )
+        })
+
+        #saving the annotaion state column corresponding to the index
+        for idx, row in edited_df.iterrows():
+            unique_id = row["id"]
+            st.session_state["annotation_data"][unique_id] = row["annotation"]
+
+
+
 
     def filtering_of_docs(self):
         def set_sliders():
@@ -574,8 +639,7 @@ class Visualization_for_lang:
                     conds.values()) for subcond in cond]
                 all_conds = np.all(all_conds, axis=0)
 
-                Visualization_for_lang.display_dataset(
-                    self.docs, np.invert(all_conds), "Discarded documents", "docs")
+                Visualization_for_lang.display_dataset(self.docs, np.invert(all_conds), "Discarded documents", "docs")
 
                 # st.subheader("Display discarded documents by filter")
                 display_discarded_documents_by_filter = st.checkbox(
@@ -663,9 +727,8 @@ class Visualization_for_lang:
                             "Discarded documents for the filter on the perplexity score",
                             "docs",
                         )
-
-                Visualization_for_lang.display_dataset(
-                    self.docs, all_conds, "Retained documents", "docs")
+                
+                Visualization_for_lang.display_dataset(self.docs, all_conds, "Retained documents", "docs")
 
             st.header("Download data")
 
@@ -747,8 +810,7 @@ class Visualization_for_lang:
                 )
 
                 # st.subheader("Display discarded words by filter")
-                display_discarded_words_by_filter = st.checkbox(
-                    "Display discarded words by filter")
+                display_discarded_words_by_filter = st.checkbox("Display discarded words by filter")
 
                 if display_discarded_words_by_filter:
 
@@ -1064,10 +1126,8 @@ class Visualization:
 
                 # If all models are found, continue setting parameters
                 visualization_for_lang = Visualization_for_lang(
-                    path_data=os.path.join(
-                        config.GENERATED_SIGNALS_DIR, lang_chosen),
-                    lang=langs_id.loc[langs_id["dataset_id"]
-                                      == lang_dataset_id, "lang"].iloc[0],
+                    path_data=os.path.join(config.GENERATED_SIGNALS_DIR, lang_chosen),
+                    lang=langs_id.loc[langs_id["dataset_id"]== lang_dataset_id, "lang"].iloc[0],
                     num_docs=config.NUM_DATA_SAMPLES,
                     num_docs_for_words=config.NUM_DATA_SAMPLES,
                     max_len_text_display=10000,
@@ -1076,7 +1136,6 @@ class Visualization:
                     path_sentencepiece_model=path_sentencepiece_model,
                     path_kenlm_model=path_kenlm_model,
                 )
-
                 visualization_for_lang.visualization_for_lang()
             else:
                 st.error(f"Please use a correct lang_id: {lang_dataset_id}")
