@@ -91,7 +91,8 @@ class Visualization_for_lang:
         self.docs_checkpoint = pd.DataFrame(docs)
 
         self.docs_checkpoint["id"] = range(len(self.docs_checkpoint))
-        self.docs_checkpoint["annotation"] = None
+        if "annotation" not in self.docs_checkpoint.columns:
+            self.docs_checkpoint["annotation"] = None
         # Arranging the order of columns 
         self.docs_checkpoint = self.docs_checkpoint[[
             "id", "number_tokens", "character_repetition_ratio", "token_repetition_ratio",
