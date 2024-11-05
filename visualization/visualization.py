@@ -998,27 +998,27 @@ class Visualization:
 
     def choose_lang(self):
         options = config.FILES_IN_GENERATED_SIGNALS_DIR
-        lang_chosen = st.selectbox("Select the file for visualization", options)
+        file_chosen = st.selectbox("Select the file for visualization", options)
 
-        if lang_chosen != "None":
-            lang_chosen_value = lang_chosen.split('/')[-1]
-            lang_chosen_dataset_id = lang_chosen_value[0:2]
+        if file_chosen != "None":
+            file_chosen_value = file_chosen.split('/')[-1]
+            file_chosen_dataset_id = file_chosen_value[0:2]
 
-            if lang_chosen_dataset_id not in config.LANG_IDS:
-                config.LANG_IDS.append(lang_chosen_dataset_id)
-            st.session_state.lang_chosen = lang_chosen
+            if file_chosen_dataset_id not in config.LANG_IDS:
+                config.LANG_IDS.append(file_chosen_dataset_id)
+            st.session_state.file_chosen = file_chosen
 
     def visualization(self):
         # Check if the language has been selected
-        if 'lang_chosen' in st.session_state:
-            lang_chosen = st.session_state.lang_chosen
+        if 'file_chosen' in st.session_state:
+            file_chosen = st.session_state.file_chosen
             # ensure that sub folder does not affect the loading of file
-            lang_chosen_value = lang_chosen.split('/')[-1]
+            file_chosen_value = file_chosen.split('/')[-1]
             # set the language data set in readme
-            lang_dataset_id = lang_chosen_value[0:2]
+            lang_dataset_id = file_chosen_value[0:2]
 
             # Exit if the file is not valid
-            if not lang_chosen.endswith('.json'):
+            if not file_chosen.endswith('.json'):
                 st.error("The selected file is not a valid JSON file.")
 
             # Load your parameters based on the selected language
@@ -1042,7 +1042,7 @@ class Visualization:
 
                 # If all models are found, continue setting parameters
                 visualization_for_lang = Visualization_for_lang(
-                    path_data=os.path.join(config.GENERATED_SIGNALS_DIR, lang_chosen),
+                    path_data=os.path.join(config.GENERATED_SIGNALS_DIR, file_chosen),
                     lang=langs_id.loc[langs_id["dataset_id"]== lang_dataset_id, "lang"].iloc[0],
                     num_docs=config.NUM_DATA_SAMPLES,
                     num_docs_for_words=config.NUM_DATA_SAMPLES,
