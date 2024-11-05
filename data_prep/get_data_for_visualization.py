@@ -276,6 +276,11 @@ class GetDataForVisualization:
 
             # Add the original text to the statistics
             stats_document["text"] = document
+
+
+            if "annotation" not in stats_document:
+                stats_document["annotaion"] = None
+
             stats.append(stats_document)
 
         # Save the computed statistics to a JSON file
