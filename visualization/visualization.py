@@ -43,7 +43,6 @@ class Visualization_for_lang:
         self.num_docs = num_docs
         self.num_docs_for_words = num_docs_for_words
         self.max_len_text_display = max_len_text_display
-
         self.lang_dataset_id = lang_dataset_id
         self.param = LoadParameters.load_parameters(lang_dataset_id)
         self.stopwords = LoadParameters.load_stopwords(lang_dataset_id)
@@ -123,14 +122,12 @@ class Visualization_for_lang:
 
     @staticmethod
     def plot_hist(dataframe, key, num_bins=50):
-        checkbox = st.checkbox("Diplay distribution",
-                               value=True, key=f"display_distribution_{key[0]}")
+        checkbox = st.checkbox("Diplay distribution",value=True, key=f"display_distribution_{key[0]}")
         if checkbox:
             fig, ax = plt.subplots()
             val = dataframe[key[0]].values
             if np.median(val) != 0:
-                val = val[abs(val - np.median(val)) < 9 *
-                          np.median(np.absolute(val - np.median(val)))]
+                val = val[abs(val - np.median(val)) < 9 *np.median(np.absolute(val - np.median(val)))]
             ax.hist(val, bins=num_bins, density=True)
             ax.set_title(" ".join(key[0].split("_")))
             ax.axvline(x=key[1], color="r", linestyle="dashed")
@@ -151,15 +148,13 @@ class Visualization_for_lang:
             columns_to_hide = config.SELECTED_COLS
             # Drop columns if they exist
             displayed_examples_edited = displayed_examples.drop(
-                columns=[
-                    col for col in columns_to_hide if col in displayed_examples.columns]
+                columns=[col for col in columns_to_hide if col in displayed_examples.columns]
             )
         else:
             # show only selected columns
             columns_to_show = config.SELECTED_COLS
             # Display only the specified columns if they exist in the dataframe
-            displayed_examples_edited = (
-                displayed_examples[columns_to_show]
+            displayed_examples_edited = (displayed_examples[columns_to_show]
                 if all(col in displayed_examples.columns for col in columns_to_show)
                 else displayed_examples
             )
@@ -228,8 +223,7 @@ class Visualization_for_lang:
                         min_tokens_value = 0
 
                     # Slider for minimum number of tokens
-                    cutoff_min_number_words = st.slider(
-                        cutoff_def, 0, min(max_nb_words, 500), min_tokens_value)
+                    cutoff_min_number_words = st.slider(cutoff_def, 0, min(max_nb_words, 500), min_tokens_value)
                     new_key = ("number_tokens", cutoff_min_number_words, False)
                     keys.append(new_key)
                     Visualization_for_lang.plot_hist(self.docs, new_key)
@@ -249,8 +243,7 @@ class Visualization_for_lang:
                         max_tokens_value = max_nb_words
 
                     # Slider for maximum number of tokens
-                    cutoff_max_number_words = st.slider(
-                        cutoff_def, 0, max_nb_words, max_tokens_value)
+                    cutoff_max_number_words = st.slider(cutoff_def, 0, max_nb_words, max_tokens_value)
                     new_key = ("number_tokens", cutoff_max_number_words, True)
                     keys.append(new_key)
                     cond_2 = get_cond(new_key[0], new_key[1], new_key[2])
@@ -260,10 +253,8 @@ class Visualization_for_lang:
 
             if "character_repetition_ratio" in columns:
                 with st.sidebar.expander("Character repetition ratio"):
-                    val_repetitions_lengths = list(
-                        self.docs["character_repetition_ratio"].iloc[0].keys())
-                    default_index = val_repetitions_lengths.index(
-                        "10") if "10" in val_repetitions_lengths else 0
+                    val_repetitions_lengths = list(self.docs["character_repetition_ratio"].iloc[0].keys())
+                    default_index = val_repetitions_lengths.index("10") if "10" in val_repetitions_lengths else 0
                     label_selectbox = (
                         "Length of repetitions in characters (that will influence the character repetition ratio)."
                     )
@@ -290,16 +281,14 @@ class Visualization_for_lang:
                     cutoff_def = "If the character repetition ratio of a document is higher than this number, the document is removed."
 
                     # Text input for character repetition ratio
-                    char_repetition_input = st.text_input(
-                        "Enter character repetition ratio", "1.0")
+                    char_repetition_input = st.text_input("Enter character repetition ratio", "1.0")
                     try:
                         char_repetition_value = float(char_repetition_input)
                     except ValueError:
                         char_repetition_value = 1.0
 
                     # Slider for character repetition ratio
-                    cutoff_character_repetition_ratio = st.slider(
-                        cutoff_def, 0.0, 1.0, char_repetition_value, step=0.01)
+                    cutoff_character_repetition_ratio = st.slider(cutoff_def, 0.0, 1.0, char_repetition_value, step=0.01)
                     new_key = (
                         "character_repetition_ratio",
                         cutoff_character_repetition_ratio,
@@ -314,10 +303,8 @@ class Visualization_for_lang:
 
             if "token_repetition_ratio" in columns:
                 with st.sidebar.expander("Token repetition ratio"):
-                    val_repetitions_lengths = list(
-                        self.docs["token_repetition_ratio"].iloc[0].keys())
-                    default_index = val_repetitions_lengths.index(
-                        "5") if "5" in val_repetitions_lengths else 0
+                    val_repetitions_lengths = list(self.docs["token_repetition_ratio"].iloc[0].keys())
+                    default_index = val_repetitions_lengths.index("5") if "5" in val_repetitions_lengths else 0
                     label_selectbox = (
                         "Length of repetitions in tokens (that will influence the token repetition ratio)."
                     )
@@ -343,8 +330,7 @@ class Visualization_for_lang:
                     cutoff_def = "If the token repetition ratio of a document is higher than this number, the document is removed."
 
                     # Text input for token repetition ratio
-                    token_repetition_input = st.text_input(
-                        "Enter token repetition ratio", "1.0")
+                    token_repetition_input = st.text_input("Enter token repetition ratio", "1.0")
                     try:
                         token_repetition_value = float(token_repetition_input)
                     except ValueError:
@@ -413,9 +399,7 @@ class Visualization_for_lang:
                                 )
                     else:
                         # code that uses text input instead of file upload
-                        flagged_words_file = st.text_input(
-                            "Enter flagged words, separated by a comma (,), eg: hello,world."
-                        )
+                        flagged_words_file = st.text_input("Enter flagged words, separated by a comma (,), eg: hello,world.")
                         if flagged_words_file:
                             new_flagged_words = flagged_words_file
                             new_flagged_words = set(new_flagged_words.split(","))
@@ -436,8 +420,7 @@ class Visualization_for_lang:
                     )
                     max_fwr = np.max(self.docs["flagged_words_ratio"])
                     max_fwr = float(np.ceil(max_fwr * 1000) / 1000)
-                    max_fwr = 1.0 if math.isclose(
-                        max_fwr, 0.0, abs_tol=1e-9) else (max_fwr + 0.001)
+                    max_fwr = 1.0 if math.isclose(max_fwr, 0.0, abs_tol=1e-9) else (max_fwr + 0.001)
 
                     # Text input for flagged words ratio
                     flagged_words_ratio_input = st.text_input("Enter flagged words ratio", str(max_fwr))
@@ -505,8 +488,7 @@ class Visualization_for_lang:
                     )
 
                     # Text input for stop words ratio
-                    stopwords_ratio_input = st.text_input(
-                        "Enter stop words ratio", "0.0")
+                    stopwords_ratio_input = st.text_input("Enter stop words ratio", "0.0")
                     try:
                         stopwords_ratio_value = float(stopwords_ratio_input)
                     except ValueError:
@@ -593,8 +575,7 @@ class Visualization_for_lang:
                     self.docs = self.docs[cond_label]
 
             if self.docs.empty:
-                st.markdown(
-                    "No document to display, please try to select a different label.")
+                st.markdown("No document to display, please try to select a different label.")
                 self.keys = []
                 self.parameters = []
 
@@ -1017,27 +998,27 @@ class Visualization:
 
     def choose_lang(self):
         options = config.FILES_IN_GENERATED_SIGNALS_DIR
-        lang_chosen = st.selectbox("Select the file for visualization", options)
+        file_chosen = st.selectbox("Select the file for visualization", options)
 
-        if lang_chosen != "None":
-            lang_chosen_value = lang_chosen.split('/')[-1]
-            lang_chosen_dataset_id = lang_chosen_value[0:2]
+        if file_chosen != "None":
+            file_chosen_value = file_chosen.split('/')[-1]
+            file_chosen_dataset_id = file_chosen_value[0:2]
 
-            if lang_chosen_dataset_id not in config.LANG_IDS:
-                config.LANG_IDS.append(lang_chosen_dataset_id)
-            st.session_state.lang_chosen = lang_chosen
+            if file_chosen_dataset_id not in config.LANG_IDS:
+                config.LANG_IDS.append(file_chosen_dataset_id)
+            st.session_state.file_chosen = file_chosen
 
     def visualization(self):
         # Check if the language has been selected
-        if 'lang_chosen' in st.session_state:
-            lang_chosen = st.session_state.lang_chosen
+        if 'file_chosen' in st.session_state:
+            file_chosen = st.session_state.file_chosen
             # ensure that sub folder does not affect the loading of file
-            lang_chosen_value = lang_chosen.split('/')[-1]
+            file_chosen_value = file_chosen.split('/')[-1]
             # set the language data set in readme
-            lang_dataset_id = lang_chosen_value[0:2]
+            lang_dataset_id = file_chosen_value[0:2]
 
             # Exit if the file is not valid
-            if not lang_chosen.endswith('.json'):
+            if not file_chosen.endswith('.json'):
                 st.error("The selected file is not a valid JSON file.")
 
             # Load your parameters based on the selected language
@@ -1061,7 +1042,7 @@ class Visualization:
 
                 # If all models are found, continue setting parameters
                 visualization_for_lang = Visualization_for_lang(
-                    path_data=os.path.join(config.GENERATED_SIGNALS_DIR, lang_chosen),
+                    path_data=os.path.join(config.GENERATED_SIGNALS_DIR, file_chosen),
                     lang=langs_id.loc[langs_id["dataset_id"]== lang_dataset_id, "lang"].iloc[0],
                     num_docs=config.NUM_DATA_SAMPLES,
                     num_docs_for_words=config.NUM_DATA_SAMPLES,
