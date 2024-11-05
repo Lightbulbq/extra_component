@@ -50,10 +50,10 @@ FASTTEXT_MODEL_PATH = os.path.join(ROOT_DIR, "models", "lid.176.bin")
 NUM_DATA_SAMPLES = count_lines(TRAIN_DATA_PATH) # uncomment for all documents/lines
 
 # # Defines the language ID - this label is used to choose kenlm model and stopwords list
-LANG_IDS = []  # possibilities from set: {'zh', 'ms', 'my', 'th', 'lo', 'km', 'ta'}
+LANG_IDS = ['en']  # possibilities from set: {'zh', 'ms', 'my', 'th', 'lo', 'km', 'ta'}
 
 # Defines the key for the text in the json file
-KEY_FOR_TEXT = "paragraphs"  # possibilities from set: {raw_content, paragraphs} - note that sea-cc uses 'paragraphs'
+KEY_FOR_TEXT = "raw_content"  # possibilities from set: {raw_content, paragraphs} - note that sea-cc uses 'paragraphs'
 
 # Defines the method used to visualize the whole documents - either you want to visualize the whole documents or you want to visualize lines of the documents
 VISUALIZE_WHOLE_DOCUMENTS = False
