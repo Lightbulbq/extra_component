@@ -90,33 +90,28 @@ class Visualization_for_lang:
 
         self.docs_checkpoint = pd.DataFrame(docs)
 
-        self.docs_checkpoint["id"] = range(len(self.docs_checkpoint))
         if "annotation" not in self.docs_checkpoint.columns:
+            # when signal file is loaded for the first time, it may not contain the annotation column. If so, then add it
             self.docs_checkpoint["annotation"] = None
-        # Arranging the order of columns 
-        self.docs_checkpoint = self.docs_checkpoint[[
-            "id", "number_tokens", "character_repetition_ratio", "token_repetition_ratio",
-            "special_characters_ratio", "flagged_words_ratio", "lang_id_score",
-            "perplexity_score", "text", "annotation"
-        ]]
 
-        # Initialize annotation data if not in session 
-        if "annotation_data" not in st.session_state:
-            st.session_state["annotation_data"] = self.docs_checkpoint[["id", "annotation"]].set_index("id")["annotation"].to_dict()
-
+        if "annotation_data" in st.session_state.keys():
+            # if saved annotation state is in the session, apply it to the loaded dataframe
+            annotation_df = st.session_state["annotation_data"]
+            self.docs_checkpoint["annotation"] = annotation_df["annotation"]    
+            
         self.docs = self.docs_checkpoint
 
     @staticmethod
     def highlight_non_rows(row):
-        styles = []
-        for col in row.index:
-            if row['annotation'] == "retain":
-                styles.append('background-color: rgba(57, 91, 59, 0.6)')  # Green for retain
-            elif row['annotation'] == "discard":
-                styles.append('background-color: rgba(110, 14, 14, 0.4)')  # Red for discard
-            else:
-                styles.append('')  # No highlight for other rows
-        return styles
+        style = ['']
+        # Determine background color based on annotation value
+        if row['annotation'] == "retain":
+            style = ['background-color: rgba(57, 91, 59, 0.6)']  # Green for retain
+        elif row['annotation'] == "discard":
+            style = ['background-color: rgba(110, 14, 14, 0.4)']  # Red for discard
+            
+        return style * len(row) # Apply the style to all columns
+    
 
     @staticmethod
     def print_discarded_by_cond(cond):
@@ -136,7 +131,7 @@ class Visualization_for_lang:
             st.pyplot(fig)
 
     @staticmethod
-    def display_dataset(dataframe, cond, description, type_of_examples):
+    def display_dataset(dataframe, cond, description, type_of_examples, data_editor_id=None, data_id=None, on_annotation_change_fn=None):
         displayed_examples = dataframe.loc[cond]
         st.subheader(
             f"{description}: {len(displayed_examples)} {type_of_examples} ({len(displayed_examples) / len(dataframe.index) * 100:.2f}%)"
@@ -160,21 +155,15 @@ class Visualization_for_lang:
                 if all(col in displayed_examples.columns for col in columns_to_show)
                 else displayed_examples
             )
-
-
-        # Apply session-stored annotations
-        for idx, row in displayed_examples_edited.iterrows():
-            unique_id = row["id"]
-            if unique_id in st.session_state["annotation_data"]:
-                displayed_examples_edited.at[idx, "annotation"] = st.session_state["annotation_data"][unique_id]
-
+        
+        if data_id is not None:
+            st.session_state[data_id] = displayed_examples_edited
+            
         # Applying highlight to row based on annotation value
         df_styled = displayed_examples_edited.style.apply(Visualization_for_lang.highlight_non_rows, axis=1)
 
-
         # only disabled columns will display styling
-        edited_df = st.data_editor(df_styled, hide_index=True,use_container_width=True, column_config={
-            "id": st.column_config.NumberColumn(disabled=True),
+        edited_df = st.data_editor(df_styled, hide_index=False,use_container_width=True, column_config={
             "number_tokens": st.column_config.NumberColumn(disabled=True),
             "character_repetition_ratio": st.column_config.NumberColumn(disabled=True),
             "token_repetition_ratio": st.column_config.NumberColumn(disabled=True),
@@ -186,16 +175,25 @@ class Visualization_for_lang:
             "annotation": st.column_config.SelectboxColumn(
                 options=['retain','discard'],  # Provide annotation options
             )
-        })
-
-        #saving the annotaion state column corresponding to the index
-        for idx, row in edited_df.iterrows():
-            unique_id = row["id"]
-            st.session_state["annotation_data"][unique_id] = row["annotation"]
+        }, key=data_editor_id,
+        on_change=on_annotation_change_fn, args=[data_editor_id, data_id])
 
 
+    def data_editor_on_change(self, data_editor_id, data_id):
+        # Get the edited rows from the data editor
+        editor_state = st.session_state[data_editor_id]
+        
+        for data_editor_index, updates in editor_state["edited_rows"].items():
+            for edited_key, edited_value in updates.items():
+                # Get the original dataframe index of the row
+                original_index = st.session_state[data_id].index[data_editor_index]
+                # Update the annotation value in the original dataframe
+                self.docs.loc[self.docs.index == original_index, edited_key] = edited_value
 
-
+        # save the annotation state in the session
+        st.session_state["annotation_data"] = self.docs[["annotation"]]
+        
+        
     def filtering_of_docs(self):
         def set_sliders():
             columns = list(self.docs)
@@ -589,7 +587,7 @@ class Visualization_for_lang:
                 all_conds = [subcond for cond in list(conds.values()) for subcond in cond]
                 all_conds = np.all(all_conds, axis=0)
 
-                Visualization_for_lang.display_dataset(self.docs, np.invert(all_conds), "Discarded documents", "docs")
+                Visualization_for_lang.display_dataset(self.docs, np.invert(all_conds), "Discarded documents", "docs", data_editor_id="discarded_docs", data_id="discarded_docs_data", on_annotation_change_fn=self.data_editor_on_change)
 
                 # st.subheader("Display discarded documents by filter")
                 display_discarded_documents_by_filter = st.checkbox("Display discarded documents by filter")
@@ -669,7 +667,7 @@ class Visualization_for_lang:
                             "docs",
                         )
                 
-                Visualization_for_lang.display_dataset(self.docs, all_conds, "Retained documents", "docs")
+                Visualization_for_lang.display_dataset(self.docs, all_conds, "Retained documents", "docs", data_editor_id="retained_docs", data_id="retained_docs_data", on_annotation_change_fn=self.data_editor_on_change)
 
             st.header("Download data")
 
@@ -998,9 +996,14 @@ class Visualization:
             "on your computer."
         )
 
+    def file_select_on_change(self):
+        # clear annotation state when a new file is selected
+        if "annotation_data" in st.session_state:
+            del st.session_state.annotation_data
+        
     def choose_lang(self):
         options = config.FILES_IN_GENERATED_SIGNALS_DIR
-        file_chosen = st.selectbox("Select the file for visualization", options)
+        file_chosen = st.selectbox("Select the file for visualization", options, on_change=self.file_select_on_change)
 
         if file_chosen != "None":
             file_chosen_value = file_chosen.split('/')[-1]
@@ -1009,6 +1012,7 @@ class Visualization:
             if file_chosen_dataset_id not in config.LANG_IDS:
                 config.LANG_IDS.append(file_chosen_dataset_id)
             st.session_state.file_chosen = file_chosen
+
 
     def visualization(self):
         # Check if the language has been selected
