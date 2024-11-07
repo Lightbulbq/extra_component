@@ -1,5 +1,3 @@
-# Run with: streamlit run visualization.py
-
 import streamlit as st
 
 import os
@@ -27,7 +25,6 @@ from filters.filtering import LoadParameters, ModifyingDocuments, Filtering
 from filters.languages_id import langs_id
 import config
 
-
 class Visualization_for_lang:
     def __init__(
         self,
@@ -40,15 +37,12 @@ class Visualization_for_lang:
         path_fasttext_model,
         path_sentencepiece_model,
         path_kenlm_model,
-    ):  
-
+    ):
         self.path_data = path_data
-        self.data = self.load_data()
         self.lang = lang
         self.num_docs = num_docs
         self.num_docs_for_words = num_docs_for_words
         self.max_len_text_display = max_len_text_display
-
         self.lang_dataset_id = lang_dataset_id
         self.param = LoadParameters.load_parameters(lang_dataset_id)
         self.stopwords = LoadParameters.load_stopwords(lang_dataset_id)
@@ -61,20 +55,16 @@ class Visualization_for_lang:
     def set_title(self):
         st.title(f"Filtering visualization for {self.lang}")
 
-    def load_data(self):
-        with open(self.path_data) as json_file:    
-            return json.load(json_file)
-    
-    def update_data(self, new_data):
-        self.data.update(new_data)
-
-    def save_data(self):
-        with open(self.path_data, 'w') as json_file:
-            json.dump(self.data, json_file, indent=4)
-
     def open_data(self):
-        with open(self.path_data) as json_file:    
-            data = json.load(json_file)
+        try:
+            if 'json_data' not in st.session_state:
+                with open(self.path_data) as json_file:
+                    st.session_state.json_data = json.load(json_file) 
+            data = st.session_state.json_data
+
+        except json.JSONDecodeError as e:
+            raise ValueError(
+                "Error decoding JSON: The document is empty or not a valid JSON file.") from e
 
         self.num_docs = min(self.num_docs, len(data))
         self.num_docs_for_words = min(self.num_docs_for_words, len(data))
@@ -97,46 +87,51 @@ class Visualization_for_lang:
                     doc["text"][: self.max_len_text_display]
                     + " [...] [THIS LONG TEXT HAS BEEN TRUNCATED FOR DISPLAY REASONS]"
                 )
+
         self.docs_checkpoint = pd.DataFrame(docs)
 
+        if "annotation" not in self.docs_checkpoint.columns:
+            # when signal file is loaded for the first time, it may not contain the annotation column. If so, then add it
+            self.docs_checkpoint["annotation"] = None
 
-        # docs_checkpoint_editable = self.docs_checkpoint.copy()
-        # if 'selected_row' not in st.session_state:
-        #         st.session_state.selected_row = None
-
-        #     # Streamlit UI elements for row selection
-        # st.header("Row Selection")
-        # selected_row_index = st.selectbox("Select Row to Edit:", range(len(docs_checkpoint_editable)))
-
-        # # Button to highlight the selected row
-        # if st.button("Highlight Selected Row"):
-        #     st.session_state.selected_row = selected_row_index
-        #     # Change annotation to "editing" for the selected row
-        #     self.docs_checkpoint.at[selected_row_index, 'annotation'] = "editing"
-        #     st.session_state.original_df.at[selected_row_index, 'annotation'] = "editing"  
-
-
+        if "annotation_data" in st.session_state.keys():
+            # if saved annotation state is in the session, apply it to the loaded dataframe
+            annotation_df = st.session_state["annotation_data"]
+            self.docs_checkpoint["annotation"] = annotation_df["annotation"]    
+            
         self.docs = self.docs_checkpoint
 
     @staticmethod
+    def highlight_non_rows(row):
+        style = ['']
+        # Determine background color based on annotation value
+        if row['annotation'] == "retain":
+            style = ['background-color: rgba(57, 91, 59, 0.6)']  # Green for retain
+        elif row['annotation'] == "discard":
+            style = ['background-color: rgba(110, 14, 14, 0.4)']  # Red for discard
+            
+        return style * len(row) # Apply the style to all columns
+    
+
+    @staticmethod
     def print_discarded_by_cond(cond):
-        st.caption(f"{(len(cond) - np.sum(1*cond)) / len(cond) * 100:.2f}% of the total is discarded with this filter.")
+        st.caption(f"{(len(cond) - np.sum(1*cond)) / len(cond) *100:.2f}% of the total is discarded with this filter.")
 
     @staticmethod
     def plot_hist(dataframe, key, num_bins=50):
-        checkbox = st.checkbox("Diplay distribution", value=True, key=f"display_distribution_{key[0]}")
+        checkbox = st.checkbox("Diplay distribution",value=True, key=f"display_distribution_{key[0]}")
         if checkbox:
             fig, ax = plt.subplots()
             val = dataframe[key[0]].values
             if np.median(val) != 0:
-                val = val[abs(val - np.median(val)) < 9 * np.median(np.absolute(val - np.median(val)))]
+                val = val[abs(val - np.median(val)) < 9 *np.median(np.absolute(val - np.median(val)))]
             ax.hist(val, bins=num_bins, density=True)
             ax.set_title(" ".join(key[0].split("_")))
             ax.axvline(x=key[1], color="r", linestyle="dashed")
             st.pyplot(fig)
 
     @staticmethod
-    def display_dataset(dataframe, cond, description, type_of_examples):
+    def display_dataset(dataframe, cond, description, type_of_examples, data_editor_id=None, data_id=None, on_annotation_change_fn=None):
         displayed_examples = dataframe.loc[cond]
         st.subheader(
             f"{description}: {len(displayed_examples)} {type_of_examples} ({len(displayed_examples) / len(dataframe.index) * 100:.2f}%)"
@@ -156,15 +151,49 @@ class Visualization_for_lang:
             # show only selected columns
             columns_to_show = config.SELECTED_COLS
             # Display only the specified columns if they exist in the dataframe
-            displayed_examples_edited = (
-                displayed_examples[columns_to_show]
+            displayed_examples_edited = (displayed_examples[columns_to_show]
                 if all(col in displayed_examples.columns for col in columns_to_show)
                 else displayed_examples
             )
+        
+        if data_id is not None:
+            st.session_state[data_id] = displayed_examples_edited
+            
+        # Applying highlight to row based on annotation value
+        df_styled = displayed_examples_edited.style.apply(Visualization_for_lang.highlight_non_rows, axis=1)
 
-        # This line displays the dataframe
-        st.dataframe(displayed_examples_edited, use_container_width=True)
+        # only disabled columns will display styling
+        edited_df = st.data_editor(df_styled, hide_index=False,use_container_width=True, column_config={
+            "number_tokens": st.column_config.NumberColumn(disabled=True),
+            "character_repetition_ratio": st.column_config.NumberColumn(disabled=True),
+            "token_repetition_ratio": st.column_config.NumberColumn(disabled=True),
+            "special_characters_ratio":st.column_config.NumberColumn(disabled=True),
+            "flagged_words_ratio": st.column_config.NumberColumn(disabled=True),
+            "lang_id_score": st.column_config.NumberColumn(disabled=True),
+            "perplexity_score": st.column_config.NumberColumn(disabled=True),
+            "text":st.column_config.TextColumn(disabled=True),
+            "annotation": st.column_config.SelectboxColumn(
+                options=['retain','discard'],  # Provide annotation options
+            )
+        }, key=data_editor_id,
+        on_change=on_annotation_change_fn, args=[data_editor_id, data_id])
 
+
+    def data_editor_on_change(self, data_editor_id, data_id):
+        # Get the edited rows from the data editor
+        editor_state = st.session_state[data_editor_id]
+        
+        for data_editor_index, updates in editor_state["edited_rows"].items():
+            for edited_key, edited_value in updates.items():
+                # Get the original dataframe index of the row
+                original_index = st.session_state[data_id].index[data_editor_index]
+                # Update the annotation value in the original dataframe
+                self.docs.loc[self.docs.index == original_index, edited_key] = edited_value
+
+        # save the annotation state in the session
+        st.session_state["annotation_data"] = self.docs[["annotation"]]
+        
+        
     def filtering_of_docs(self):
         def set_sliders():
             columns = list(self.docs)
@@ -206,7 +235,8 @@ class Visualization_for_lang:
                     )
 
                     # Text input for maximum number of tokens
-                    max_tokens_input = st.text_input("Enter maximum number of tokens", str(max_nb_words))
+                    max_tokens_input = st.text_input(
+                        "Enter maximum number of tokens", str(max_nb_words))
                     try:
                         max_tokens_value = int(max_tokens_input)
                     except ValueError:
@@ -369,9 +399,7 @@ class Visualization_for_lang:
                                 )
                     else:
                         # code that uses text input instead of file upload
-                        flagged_words_file = st.text_input(
-                            "Enter flagged words, separated by a comma (,), eg: hello,world."
-                        )
+                        flagged_words_file = st.text_input("Enter flagged words, separated by a comma (,), eg: hello,world.")
                         if flagged_words_file:
                             new_flagged_words = flagged_words_file
                             new_flagged_words = set(new_flagged_words.split(","))
@@ -410,7 +438,7 @@ class Visualization_for_lang:
                         step=0.001,
                         format="%f",
                     )
-                    new_key = ("flagged_words_ratio", cutoff_flagged_words_ratio, True)
+                    new_key = ("flagged_words_ratio",cutoff_flagged_words_ratio, True)
                     keys.append(new_key)
                     Visualization_for_lang.plot_hist(self.docs, new_key)
                     cond = get_cond(new_key[0], new_key[1], new_key[2])
@@ -468,7 +496,7 @@ class Visualization_for_lang:
 
                     # Slider for stop words ratio
                     cutoff_stopwords_ratio = st.slider(cutoff_def, 0.0, 1.0, stopwords_ratio_value, step=0.01)
-                    new_key = ("stopwords_ratio", cutoff_stopwords_ratio, False)
+                    new_key = ("stopwords_ratio",cutoff_stopwords_ratio, False)
                     keys.append(new_key)
                     Visualization_for_lang.plot_hist(self.docs, new_key)
                     cond = get_cond(new_key[0], new_key[1], new_key[2])
@@ -514,7 +542,7 @@ class Visualization_for_lang:
 
                     # Slider for perplexity score
                     cutoff_perplexity_score = st.slider(cutoff_def, 0, max_pp, perplexity_score_value)
-                    new_key = ("perplexity_score", cutoff_perplexity_score, True)
+                    new_key = ("perplexity_score",cutoff_perplexity_score, True)
                     keys.append(new_key)
                     Visualization_for_lang.plot_hist(self.docs, new_key)
                     cond = get_cond(new_key[0], new_key[1], new_key[2], max_pp=max_pp)
@@ -559,7 +587,7 @@ class Visualization_for_lang:
                 all_conds = [subcond for cond in list(conds.values()) for subcond in cond]
                 all_conds = np.all(all_conds, axis=0)
 
-                Visualization_for_lang.display_dataset(self.docs, np.invert(all_conds), "Discarded documents", "docs")
+                Visualization_for_lang.display_dataset(self.docs, np.invert(all_conds), "Discarded documents", "docs", data_editor_id="discarded_docs", data_id="discarded_docs_data", on_annotation_change_fn=self.data_editor_on_change)
 
                 # st.subheader("Display discarded documents by filter")
                 display_discarded_documents_by_filter = st.checkbox("Display discarded documents by filter")
@@ -638,8 +666,8 @@ class Visualization_for_lang:
                             "Discarded documents for the filter on the perplexity score",
                             "docs",
                         )
-
-                Visualization_for_lang.display_dataset(self.docs, all_conds, "Retained documents", "docs")
+                
+                Visualization_for_lang.display_dataset(self.docs, all_conds, "Retained documents", "docs", data_editor_id="retained_docs", data_id="retained_docs_data", on_annotation_change_fn=self.data_editor_on_change)
 
             st.header("Download data")
 
@@ -831,7 +859,6 @@ class Visualization_for_lang:
             if personal_doc:
 
                 st.markdown("Statistics of the document:")
-                # print(self.keys)
 
                 for key in self.keys:
                     if key[0] == "number_tokens":
@@ -934,16 +961,13 @@ class Visualization_for_lang:
         self.set_title()
         self.open_data()
         self.filtering_of_docs()
-        # self.filtering_of_words()
-        # self.filtering_of_sentences()
         self.download_parameters()
         self.analyse_personal_doc()
 
 
 class Visualization:
-    def __init__(self, path_instructions, param_visu_langs):
+    def __init__(self, path_instructions):
         self.path_instructions = path_instructions
-        self.param_visu_langs = param_visu_langs
 
     def preamble(self):
         def get_binary_file_downloader_html(bin_file, file_label="File"):
@@ -972,9 +996,17 @@ class Visualization:
             "on your computer."
         )
 
+    def file_select_on_change(self):
+        # clear loaded json file and annotation state when a new file is selected
+        if 'json_data' in st.session_state:
+            del st.session_state.json_data
+            
+        if "annotation_data" in st.session_state:
+            del st.session_state.annotation_data
+        
     def choose_lang(self):
-        options = config.FILES_IN_GENERATED_SIGNALS_DIR 
-        file_chosen = st.selectbox("Select the file for visualization", options)
+        options = config.FILES_IN_GENERATED_SIGNALS_DIR
+        file_chosen = st.selectbox("Select the file for visualization", options, on_change=self.file_select_on_change)
 
         if file_chosen != "None":
             file_chosen_value = file_chosen.split('/')[-1]
@@ -982,25 +1014,23 @@ class Visualization:
 
             if file_chosen_dataset_id not in config.LANG_IDS:
                 config.LANG_IDS.append(file_chosen_dataset_id)
-            #     print(f"Added {file_chosen_dataset_id} to config.LANG_IDS.")
-            # else:
-            #     print(f"{file_chosen_dataset_id} is already in config.LANG_IDS.")
-            st.session_state.file_chosen = file_chosen 
+            st.session_state.file_chosen = file_chosen
+
 
     def visualization(self):
         # Check if the language has been selected
         if 'file_chosen' in st.session_state:
-            file_chosen = st.session_state.file_chosen 
+            file_chosen = st.session_state.file_chosen
+
             # ensure that sub folder does not affect the loading of file
             file_chosen_value = file_chosen.split('/')[-1]
             # set the language data set in readme
             lang_dataset_id = file_chosen_value[0:2]
 
-
             # Exit if the file is not valid
             if not file_chosen.endswith('.json'):
                 st.error("The selected file is not a valid JSON file.")
-                
+
             # Load your parameters based on the selected language
             if lang_dataset_id in config.LANGS_SET:
                 kenlm_path = config.KENLM_PATH
@@ -1021,50 +1051,30 @@ class Visualization:
                     raise FileNotFoundError(f"KenLM model not found at {path_kenlm_model}.")
 
                 # If all models are found, continue setting parameters
-                self.param_visu_langs[lang_dataset_id] = {
-                    "path_data": os.path.join(config.GENERATED_SIGNALS_DIR, file_chosen),
-                    "lang": langs_id.loc[langs_id["dataset_id"] == lang_dataset_id, "lang"].iloc[0],
-                    "num_docs": config.NUM_DATA_SAMPLES,
-                    "num_docs_for_words": config.NUM_DATA_SAMPLES,
-                    "max_len_text_display": 10000,
-                    "lang_dataset_id": lang_dataset_id,
-                    "path_fasttext_model": path_fasttext_model,
-                    "path_sentencepiece_model": path_sentencepiece_model,
-                    "path_kenlm_model": path_kenlm_model,
-                }
-
                 visualization_for_lang = Visualization_for_lang(
-                    path_data=self.param_visu_langs[lang_dataset_id]["path_data"],
-                    lang=self.param_visu_langs[lang_dataset_id]["lang"],
-                    num_docs=self.param_visu_langs[lang_dataset_id]["num_docs"],
-                    num_docs_for_words=self.param_visu_langs[lang_dataset_id]["num_docs_for_words"],
-                    max_len_text_display=self.param_visu_langs[lang_dataset_id]["max_len_text_display"],
-                    lang_dataset_id=self.param_visu_langs[lang_dataset_id]["lang_dataset_id"],
-                    path_fasttext_model=self.param_visu_langs[lang_dataset_id]["path_fasttext_model"],
-                    path_sentencepiece_model=self.param_visu_langs[lang_dataset_id]["path_sentencepiece_model"],
-                    path_kenlm_model=self.param_visu_langs[lang_dataset_id]["path_kenlm_model"],
+                    path_data=os.path.join(config.GENERATED_SIGNALS_DIR, file_chosen),
+                    lang=langs_id.loc[langs_id["dataset_id"]== lang_dataset_id, "lang"].iloc[0],
+                    num_docs=config.NUM_DATA_SAMPLES,
+                    num_docs_for_words=config.NUM_DATA_SAMPLES,
+                    max_len_text_display=10000,
+                    lang_dataset_id=lang_dataset_id,
+                    path_fasttext_model=path_fasttext_model,
+                    path_sentencepiece_model=path_sentencepiece_model,
+                    path_kenlm_model=path_kenlm_model,
                 )
-
                 visualization_for_lang.visualization_for_lang()
             else:
                 st.error(f"Please use a correct lang_id: {lang_dataset_id}")
-        # else:
-        #     st.warning("Please select a language to continue.")
 
         
 def load_visualization():
     path_instructions = config.INSTRUCTIONS_PDF_PATH
-    param_visu_langs = {}
-    visualization_instance = Visualization(path_instructions, param_visu_langs)
+    visualization_instance = Visualization(path_instructions)
     visualization_instance.choose_lang()
     visualization_instance.visualization()
-            
-
+    
 if __name__ == "__main__":
     st.set_page_config(layout="wide")
-    load_visualization()
-    
-    
-    
+    load_visualization() 
     
     
