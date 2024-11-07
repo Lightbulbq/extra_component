@@ -997,7 +997,10 @@ class Visualization:
         )
 
     def file_select_on_change(self):
-        # clear annotation state when a new file is selected
+        # clear loaded json file and annotation state when a new file is selected
+        if 'json_data' in st.session_state:
+            del st.session_state.json_data
+            
         if "annotation_data" in st.session_state:
             del st.session_state.annotation_data
         
@@ -1018,6 +1021,7 @@ class Visualization:
         # Check if the language has been selected
         if 'file_chosen' in st.session_state:
             file_chosen = st.session_state.file_chosen
+            print(file_chosen)
             # ensure that sub folder does not affect the loading of file
             file_chosen_value = file_chosen.split('/')[-1]
             # set the language data set in readme
