@@ -816,10 +816,10 @@ class Visualization_for_lang:
             "special_characters_ratio": "special_characters_max_cutoff",
             "flagged_words_ratio": "flagged_words_max_cutoff_tok"
         }
+        
         occurrence_tracker = {}
         for param in self.parameters:
             name, value, *_ = param
-            # print(self.parameters)
             if name in param_mapping:
                 mapping = param_mapping[name]
 
@@ -837,9 +837,10 @@ class Visualization_for_lang:
         parameters_list = ["number_words_min_cutoff_tok", "number_words_max_cutoff_tok","number_words_min_cutoff_ws", "number_words_max_cutoff_ws","character_repetition_min_cutoff", "character_repetition_max_cutoff","word_repetition_min_cutoff_tok", "word_repetition_max_cutoff_tok", "word_repetition_min_cutoff_ws", "word_repetition_max_cutoff_ws","special_characters_min_cutoff", "special_characters_max_cutoff","stopwords_min_cutoff_tok", "stopwords_max_cutoff_tok", "stopwords_min_cutoff_ws", "stopwords_max_cutoff_ws", "flagged_words_min_cutoff_tok", "flagged_words_max_cutoff_tok", "flagged_words_min_cutoff_ws", "flagged_words_max_cutoff_ws", "lines_terminal_punc_min_cutoff", "lines_terminal_punc_max_cutoff", "lines_javascript_min_cutoff", "lines_javascript_max_cutoff","lines_bulletpoint_min_cutoff", "lines_bulletpoint_max_cutoff", "lines_unwanted_words_min_cutoff", "lines_unwanted_words_max_cutoff","lines_emoji_min_cutoff", "lines_emoji_max_cutoff","curly_bracket_min_cutoff", "curly_bracket_max_cutoff","num_lines_min_cutoff", "num_lines_max_cutoff", "lines_num_tokens_min_cutoff", "lines_num_tokens_max_cutoff","lines_num_words_min_cutoff", "lines_num_words_max_cutoff"
          ]
 
+        #setting all the filters to -1
         filtered_parameters = {param: -1 for param in parameters_list}
 
-
+        #setting the other parameters to the parameters in filters/parameters_filtering
         for param in parameters_list:
             if param in self.param:
                 filtered_parameters[param] = self.param[param]
