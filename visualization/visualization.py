@@ -807,7 +807,6 @@ class Visualization_for_lang:
 
             Visualization_for_lang.display_dataset(self.sentences, all_conds, "Retained sentences", "sents")
 
-
     def download_parameters_filter(self):
         param_mapping = {
             "number_tokens": ("number_words_min_cutoff_tok", "number_words_max_cutoff_tok"),
