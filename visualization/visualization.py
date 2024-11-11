@@ -807,13 +807,6 @@ class Visualization_for_lang:
 
             Visualization_for_lang.display_dataset(self.sentences, all_conds, "Retained sentences", "sents")
 
-    def download_parameters(self):
-        st.sidebar.subheader("Download parameters")
-        btn = st.sidebar.download_button(
-            label="Download current parameters as json",
-            data=json.dumps(self.parameters),
-            file_name=f"parameters_{self.lang_dataset_id}.json",
-        )
 
     def download_parameters_filter(self):
         param_mapping = {
@@ -852,6 +845,7 @@ class Visualization_for_lang:
                 filtered_parameters[param] = self.param[param]
 
         json_data = json.dumps(filtered_parameters, indent=4)
+        st.sidebar.subheader("Download parameters")
         st.sidebar.download_button(
             label="Download parameters_filters as json",
             data=json_data,
@@ -1007,7 +1001,6 @@ class Visualization_for_lang:
         self.set_title()
         self.open_data()
         self.filtering_of_docs()
-        self.download_parameters()
         self.download_parameters_filter()
         self.analyse_personal_doc()
 
