@@ -17,18 +17,15 @@ DATA_DIR = os.path.join(ROOT_DIR, "data", "datasets")
 GENERATED_SIGNALS_DIR = os.path.join(ROOT_DIR, "data", "generated_signals") 
 
 FILES_IN_GENERATED_SIGNALS_DIR =[]
+
 for dirpath, dirnames, filenames in os.walk(GENERATED_SIGNALS_DIR):
     for filename in filenames:
         if filename.endswith('.json'):
-            relative_path = os.path.relpath(dirpath, GENERATED_SIGNALS_DIR)
-            if relative_path == ".":  # If in the root folder, just show the filename
-                FILES_IN_GENERATED_SIGNALS_DIR.append(filename)
-            else:  # If in a subfolder, show subfolder/filename
-                FILES_IN_GENERATED_SIGNALS_DIR.append(os.path.join(relative_path, filename))
+            relative_path = os.path.relpath(dirpath,start=ROOT_DIR)
+            FILES_IN_GENERATED_SIGNALS_DIR.append(os.path.join(relative_path, filename))
         else:
             continue
-        
-# Data path
+
 TRAIN_DATA_PATH = os.path.join(DATA_DIR, "small_8days_dedup.jsonl")
 
 # Path to the stopwords directory
