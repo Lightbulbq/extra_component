@@ -98,7 +98,7 @@ class Visualization_for_lang:
             # if saved annotation state is in the session, apply it to the loaded dataframe
             annotation_df = st.session_state["annotation_data"]
             self.docs_checkpoint["annotation"] = annotation_df["annotation"]    
-            
+        
         self.docs = self.docs_checkpoint
 
     @staticmethod
@@ -669,14 +669,31 @@ class Visualization_for_lang:
                 
                 Visualization_for_lang.display_dataset(self.docs, all_conds, "Retained documents", "docs", data_editor_id="retained_docs", data_id="retained_docs_data", on_annotation_change_fn=self.data_editor_on_change)
 
-            st.header("Download data")
+            st.header("Save data")
+            
+            data_json = st.session_state["json_data"]
+            #getting the basename of the folder
+            file_name = os.path.basename(st.session_state['file_chosen'])
+            annotation_list = self.docs["annotation"].tolist()
 
-            with open(self.path_data) as json_file:
-                btn = st.download_button(
-                    label="Download data as json",
-                    data=json_file,
-                    file_name="data.json",
-                )
+            #adding the annotationed columns into the generated_signal
+            for record, annotation in zip(data_json, annotation_list):
+                record["annotation"] = annotation
+
+            json_string = json.dumps(st.session_state["json_data"])
+            user_directory = st.session_state.get('user_directory')
+            file_path = os.path.join(user_directory, file_name)
+
+            # Function to create file and trigger download
+            def save_file():
+                # Write the JSON data to the file, overwriting any existing file
+                with open(file_path, "w") as json_file:
+                    json_file.write(json_string)
+
+            # Provide a button for the user to save the file
+            if st.button("Save data as JSON"):
+                save_file()
+
 
     def filtering_of_words(self):
         if not (self.words is None):
@@ -1056,6 +1073,15 @@ class Visualization:
                 config.LANG_IDS.append(file_chosen_dataset_id)
             st.session_state.file_chosen = file_chosen
 
+    def resetting_data(self):
+        user_email = st.session_state.get('email', None)
+        prev_email = st.session_state.get('prev_email', None)
+        if user_email and prev_email:
+            if user_email != prev_email:
+                #clearing of data
+                self.file_select_on_change()
+        st.session_state["prev_email"] = user_email
+    
 
     def visualization(self):
         # Check if the language has been selected
@@ -1092,7 +1118,7 @@ class Visualization:
 
                 # If all models are found, continue setting parameters
                 visualization_for_lang = Visualization_for_lang(
-                    path_data=os.path.join(config.GENERATED_SIGNALS_DIR, file_chosen),
+                    path_data=os.path.join(config.ROOT_DIR, file_chosen),
                     lang=langs_id.loc[langs_id["dataset_id"]== lang_dataset_id, "lang"].iloc[0],
                     num_docs=config.NUM_DATA_SAMPLES,
                     num_docs_for_words=config.NUM_DATA_SAMPLES,
@@ -1111,7 +1137,9 @@ def load_visualization():
     path_instructions = config.INSTRUCTIONS_PDF_PATH
     visualization_instance = Visualization(path_instructions)
     visualization_instance.choose_lang()
+    visualization_instance.resetting_data()
     visualization_instance.visualization()
+    
     
 if __name__ == "__main__":
     st.set_page_config(layout="wide")
