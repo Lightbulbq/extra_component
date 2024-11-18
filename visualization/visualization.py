@@ -8,6 +8,7 @@ import json
 import pandas as pd
 import math
 
+
 pd.options.mode.chained_assignment = None
 
 import numpy as np
@@ -23,6 +24,8 @@ sys.path.append(str(Path(sys.path[0]).parent.absolute().parent.absolute()))
 
 from filters.filtering import LoadParameters, ModifyingDocuments, Filtering
 from filters.languages_id import langs_id
+from filters.f1_score import Precision, Recall, F1_score, Accuracy
+
 import config
 
 class Visualization_for_lang:
@@ -89,6 +92,7 @@ class Visualization_for_lang:
                 )
 
         self.docs_checkpoint = pd.DataFrame(docs)
+        
 
         if "annotation" not in self.docs_checkpoint.columns:
             # when signal file is loaded for the first time, it may not contain the annotation column. If so, then add it
@@ -111,6 +115,7 @@ class Visualization_for_lang:
             style = ['background-color: rgba(110, 14, 14, 0.4)']  # Red for discard
             
         return style * len(row) # Apply the style to all columns
+    
     
 
     @staticmethod
@@ -158,6 +163,7 @@ class Visualization_for_lang:
         
         if data_id is not None:
             st.session_state[data_id] = displayed_examples_edited
+                    
             
         # Applying highlight to row based on annotation value
         df_styled = displayed_examples_edited.style.apply(Visualization_for_lang.highlight_non_rows, axis=1)
@@ -182,6 +188,7 @@ class Visualization_for_lang:
     def data_editor_on_change(self, data_editor_id, data_id):
         # Get the edited rows from the data editor
         editor_state = st.session_state[data_editor_id]
+
         
         for data_editor_index, updates in editor_state["edited_rows"].items():
             for edited_key, edited_value in updates.items():
@@ -192,8 +199,51 @@ class Visualization_for_lang:
 
         # save the annotation state in the session
         st.session_state["annotation_data"] = self.docs[["annotation"]]
+    
+    def f1_score_calculation():
+        retained_annotations = st.session_state["retained_docs_data"]["annotation"]
+        discarded_annotations = st.session_state["discarded_docs_data"]["annotation"]
+
+        #True Positive value(User marked as retain and appears in retain table)
+        TP = (retained_annotations == "retain").sum() 
+
+        #True Negative value(User named as discard and appears in the discard table)
+        TN = (discarded_annotations == "discard").sum()
+
+        #False Positive(User marked as discard and appears in retain table)
+        FP = (retained_annotations == "discard").sum() 
+
+        #False Negative (User marked as retain and appears in discard table)
+        FN = (discarded_annotations == "retain").sum()  
+
+        prec = Precision(TP,FP)
+        rec = Recall(TP,FN)
+
+        metrics_df = pd.DataFrame([{
+        "True Positives (TP)": TP,
+        "False Positives (FP)": FP,
+        "False Negatives (FN)": FN,
+        "Precision": round(prec, 4),
+        "Recall": round(rec, 4),
+        "F1 Score": round(F1_score(prec,rec), 4),
+        "Accuracy": round(Accuracy(TP,TN,FP,FN), 4)
+        }])
+
+        st.dataframe(metrics_df, use_container_width=True, hide_index = True)
+        st.session_state["metrics_df"] = metrics_df
+        # st.write("TP:",TP)
+        # st.write("TN:",TN)
+        # st.write("FP:",FP)
+        # st.write("FN:",FN)
+        # st.write("PRECISION:", prec)
+        # st.write("RECALL:", rec)
+        # st.write("F1_Score:",F1_score(prec,rec))
+        # st.write("Accuracy:", Accuracy(TP,TN , FP , FN))
+                
+                
+
         
-        
+    
     def filtering_of_docs(self):
         def set_sliders():
             columns = list(self.docs)
@@ -668,6 +718,14 @@ class Visualization_for_lang:
                         )
                 
                 Visualization_for_lang.display_dataset(self.docs, all_conds, "Retained documents", "docs", data_editor_id="retained_docs", data_id="retained_docs_data", on_annotation_change_fn=self.data_editor_on_change)
+                
+
+                
+                st.header("F1_Score")
+                Visualization_for_lang.f1_score_calculation()
+
+
+                
 
             st.header("Save data")
             
@@ -682,11 +740,6 @@ class Visualization_for_lang:
 
             json_string = json.dumps(st.session_state["json_data"])
             user_directory = st.session_state.get('user_directory')
-
-            #giving unique ids to each of the generated_signals for differentiation
-            # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            # file_name_with_timestamp = f"{file_name.replace('.json', '')}_{timestamp}.json"
-
             file_path = os.path.join(user_directory, file_name)
 
             # Function to create file and trigger download
@@ -695,10 +748,9 @@ class Visualization_for_lang:
                 with open(file_path, "w") as json_file:
                     json_file.write(json_string)
 
-            # Provide a download button for the user to download the file
+            # Provide a button for the user to save the file
             if st.button("Save data as JSON"):
                 save_file()
-
 
     def filtering_of_words(self):
         if not (self.words is None):
@@ -1066,6 +1118,9 @@ class Visualization:
         if "annotation_data" in st.session_state:
             del st.session_state.annotation_data
         
+        if "metrics_df" in st.session_state:
+            del st.session_state.metrics_df
+
     def choose_lang(self):
         options = config.FILES_IN_GENERATED_SIGNALS_DIR
         file_chosen = st.selectbox("Select the file for visualization", options, on_change=self.file_select_on_change)
@@ -1143,11 +1198,11 @@ def load_visualization():
     visualization_instance = Visualization(path_instructions)
     visualization_instance.choose_lang()
     visualization_instance.resetting_data()
-    visualization_instance.visualization()
-    
-    
+    visualization_instance.visualization()  
+
 if __name__ == "__main__":
     st.set_page_config(layout="wide")
+
     load_visualization() 
     
     
