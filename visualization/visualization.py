@@ -703,7 +703,7 @@ class Visualization_for_lang:
                 
                 Visualization_for_lang.display_dataset(self.docs, all_conds, "Retained documents", "docs", data_editor_id="retained_docs", data_id="retained_docs_data", on_annotation_change_fn=self.data_editor_on_change)
                                
-                st.header("F1_Score")
+                st.header("F1_Score and Accuracy")
                 Visualization_for_lang.f1_score_calculation()
 
             st.header("Save data")
