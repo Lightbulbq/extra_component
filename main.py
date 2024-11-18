@@ -57,11 +57,9 @@ def get_authorized_users():
 
 def create_user_directory(email=None):
     if email is None:
-        user_dir = os.path.join(config.ROOT_DIR, "user",
-                                "single_user", "admin")
+        user_dir = os.path.join(config.ROOT_DIR, "user","single_user", "admin")
     else:
-        user_dir = os.path.join(config.ROOT_DIR, "user",
-                                "multi_user", f"datafiles_{email}")
+        user_dir = os.path.join(config.ROOT_DIR, "user","multi_user", f"datafiles_{email}")
     if not os.path.exists(user_dir):
         os.makedirs(user_dir)
 
