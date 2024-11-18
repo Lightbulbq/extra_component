@@ -8,7 +8,6 @@ import json
 import pandas as pd
 import math
 
-
 pd.options.mode.chained_assignment = None
 
 import numpy as np
@@ -93,7 +92,6 @@ class Visualization_for_lang:
 
         self.docs_checkpoint = pd.DataFrame(docs)
         
-
         if "annotation" not in self.docs_checkpoint.columns:
             # when signal file is loaded for the first time, it may not contain the annotation column. If so, then add it
             self.docs_checkpoint["annotation"] = None
@@ -117,7 +115,6 @@ class Visualization_for_lang:
         return style * len(row) # Apply the style to all columns
     
     
-
     @staticmethod
     def print_discarded_by_cond(cond):
         st.caption(f"{(len(cond) - np.sum(1*cond)) / len(cond) *100:.2f}% of the total is discarded with this filter.")
@@ -163,8 +160,7 @@ class Visualization_for_lang:
         
         if data_id is not None:
             st.session_state[data_id] = displayed_examples_edited
-                    
-            
+                             
         # Applying highlight to row based on annotation value
         df_styled = displayed_examples_edited.style.apply(Visualization_for_lang.highlight_non_rows, axis=1)
 
@@ -188,8 +184,7 @@ class Visualization_for_lang:
     def data_editor_on_change(self, data_editor_id, data_id):
         # Get the edited rows from the data editor
         editor_state = st.session_state[data_editor_id]
-
-        
+       
         for data_editor_index, updates in editor_state["edited_rows"].items():
             for edited_key, edited_value in updates.items():
                 # Get the original dataframe index of the row
@@ -231,18 +226,7 @@ class Visualization_for_lang:
 
         st.dataframe(metrics_df, use_container_width=True, hide_index = True)
         st.session_state["metrics_df"] = metrics_df
-        # st.write("TP:",TP)
-        # st.write("TN:",TN)
-        # st.write("FP:",FP)
-        # st.write("FN:",FN)
-        # st.write("PRECISION:", prec)
-        # st.write("RECALL:", rec)
-        # st.write("F1_Score:",F1_score(prec,rec))
-        # st.write("Accuracy:", Accuracy(TP,TN , FP , FN))
                 
-                
-
-        
     
     def filtering_of_docs(self):
         def set_sliders():
@@ -718,14 +702,9 @@ class Visualization_for_lang:
                         )
                 
                 Visualization_for_lang.display_dataset(self.docs, all_conds, "Retained documents", "docs", data_editor_id="retained_docs", data_id="retained_docs_data", on_annotation_change_fn=self.data_editor_on_change)
-                
-
-                
+                               
                 st.header("F1_Score")
                 Visualization_for_lang.f1_score_calculation()
-
-
-                
 
             st.header("Save data")
             
@@ -1202,7 +1181,6 @@ def load_visualization():
 
 if __name__ == "__main__":
     st.set_page_config(layout="wide")
-
     load_visualization() 
     
     
