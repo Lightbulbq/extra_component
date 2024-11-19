@@ -3,12 +3,12 @@ import streamlit as st
 import os
 
 from io import StringIO , BytesIO
+from PyPDF2 import PdfMerger
 import base64
 import json
 import pandas as pd
 import math
 
-# import io
 
 pd.options.mode.chained_assignment = None
 
@@ -126,8 +126,6 @@ class Visualization_for_lang:
 
         if "histograms" not in st.session_state:
             st.session_state["histograms"] = []
-        if "keys" not in st.session_state:
-            st.session_state["keys"] = []
 
         checkbox = st.checkbox("Diplay distribution",value=True, key=f"display_distribution_{key[0]}")
         if checkbox:
@@ -143,10 +141,11 @@ class Visualization_for_lang:
             buf = BytesIO()
             fig.savefig(buf, format="pdf")
 
+        if key[0] not in st.session_state["keys"]:
             st.session_state["histograms"].append(buf)
             st.session_state["keys"].append(key[0])
 
-            st.pyplot(fig)
+        st.pyplot(fig)
 
 
     @staticmethod
@@ -254,7 +253,8 @@ class Visualization_for_lang:
 
         st.session_state["metrics_df"] = metrics_df
         return metrics_df
-                
+        
+
     
     def filtering_of_docs(self):
         def set_sliders():
@@ -931,7 +931,7 @@ class Visualization_for_lang:
                 filtered_parameters[param] = self.param[param]
 
         json_data = json.dumps(filtered_parameters, indent=4)
-        st.sidebar.subheader("Download Parameters")
+        st.sidebar.subheader("Downloads")
         st.sidebar.download_button(
             label="Download parameters_filters as json",
             data=json_data,
@@ -939,18 +939,27 @@ class Visualization_for_lang:
             mime="application/json"
         )
 
-        st.sidebar.subheader("Save Histograms")
-        if st.sidebar.button("Save all histograms"):
-            user_directory = st.session_state.get('user_directory')
+        pdf_merger = PdfMerger()
+        for key, hist_buf in zip(st.session_state["keys"], st.session_state["histograms"]):
+            hist_buf.seek(0)  
+            pdf_merger.append(hist_buf)
 
-            for key, hist_buf in zip(st.session_state["keys"],st.session_state["histograms"]):
-                    file_path = os.path.join(user_directory, f"{key}.pdf")
-                    hist_buf.seek(0)
-                    with open(file_path, "wb") as f:
-                        f.write(hist_buf.read())  # Write the content of the BytesIO buffer to a file
+        # After all PDFs are appended, write to the output buffer
+        output_buffer = BytesIO()
+        pdf_merger.write(output_buffer)
+        pdf_merger.close()
 
-    
+        output_buffer.seek(0) 
 
+        # Ensure the output buffer has data before creating the download button
+        if output_buffer.getbuffer().nbytes > 0:
+            st.sidebar.download_button(
+                label="Download Combined PDF",
+                data=output_buffer,
+                file_name="combined_histograms.pdf",
+                mime="application/pdf",
+            )
+            
 
     """
     def plot_zipf_law(self):
