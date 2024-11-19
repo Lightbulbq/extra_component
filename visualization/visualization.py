@@ -213,21 +213,32 @@ class Visualization_for_lang:
         st.session_state["annotation_data"] = self.docs[["annotation"]]
     
     def f1_score_calculation():
-        retained_annotations = st.session_state["retained_docs_data"]["annotation"]
-        discarded_annotations = st.session_state["discarded_docs_data"]["annotation"]
+        
+        if "retained_docs_data" in st.session_state and "discarded_docs_data" in st.session_state:
 
-        #True Positive value(User marked as retain and appears in retain table)
-        TP = (retained_annotations == "retain").sum() 
+            retained_annotations = st.session_state["retained_docs_data"]["annotation"]
+            discarded_annotations = st.session_state["discarded_docs_data"]["annotation"]
 
-        #True Negative value(User named as discard and appears in the discard table)
-        TN = (discarded_annotations == "discard").sum()
+            #True Positive value(User marked as retain and appears in retain table)
+            TP = (retained_annotations == "retain").sum() 
 
-        #False Positive(User marked as discard and appears in retain table)
-        FP = (retained_annotations == "discard").sum() 
+            #True Negative value(User named as discard and appears in the discard table)
+            TN = (discarded_annotations == "discard").sum()
 
-        #False Negative (User marked as retain and appears in discard table)
-        FN = (discarded_annotations == "retain").sum()  
+            #False Positive(User marked as discard and appears in retain table)
+            FP = (retained_annotations == "discard").sum() 
 
+            #False Negative (User marked as retain and appears in discard table)
+            FN = (discarded_annotations == "retain").sum()  
+
+            
+        else:
+
+            TP = 0
+            TN = 0
+            FP = 0
+            FN = 0
+        
         prec = Precision(TP,FP)
         rec = Recall(TP,FN)
 
@@ -241,8 +252,8 @@ class Visualization_for_lang:
         "Accuracy": round(Accuracy(TP,TN,FP,FN), 4)
         }])
 
-        st.dataframe(metrics_df, use_container_width=True, hide_index = True)
         st.session_state["metrics_df"] = metrics_df
+        return metrics_df
                 
     
     def filtering_of_docs(self):
@@ -605,6 +616,9 @@ class Visualization_for_lang:
         with st.expander(f"Filtering on documents, for {self.num_docs} {self.lang} documents"):
             st.header(f"Filtering on documents, for {self.num_docs} {self.lang} documents")
 
+            st.subheader("Metrics")
+            metrics_placeholder = st.empty()
+
             if "labels" in list(self.docs):
                 chosen_label = st.selectbox(
                     label="Consider only documents that include the following label",
@@ -719,9 +733,11 @@ class Visualization_for_lang:
                         )
                 
                 Visualization_for_lang.display_dataset(self.docs, all_conds, "Retained documents", "docs", data_editor_id="retained_docs", data_id="retained_docs_data", on_annotation_change_fn=self.data_editor_on_change)
+
+                metrics_df = Visualization_for_lang.f1_score_calculation()
+                if metrics_df is not None and not metrics_df.empty:
+                    metrics_placeholder.dataframe(metrics_df, hide_index=True)
                                
-                st.header("F1_Score and Accuracy")
-                Visualization_for_lang.f1_score_calculation()
 
             st.header("Save data")
             
