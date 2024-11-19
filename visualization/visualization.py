@@ -23,6 +23,8 @@ sys.path.append(str(Path(sys.path[0]).parent.absolute().parent.absolute()))
 
 from filters.filtering import LoadParameters, ModifyingDocuments, Filtering
 from filters.languages_id import langs_id
+from filters.f1_score import Precision, Recall, F1_score, Accuracy
+
 import config
 
 class Visualization_for_lang:
@@ -89,7 +91,7 @@ class Visualization_for_lang:
                 )
 
         self.docs_checkpoint = pd.DataFrame(docs)
-
+        
         if "annotation" not in self.docs_checkpoint.columns:
             # when signal file is loaded for the first time, it may not contain the annotation column. If so, then add it
             self.docs_checkpoint["annotation"] = None
@@ -112,7 +114,7 @@ class Visualization_for_lang:
             
         return style * len(row) # Apply the style to all columns
     
-
+    
     @staticmethod
     def print_discarded_by_cond(cond):
         st.caption(f"{(len(cond) - np.sum(1*cond)) / len(cond) *100:.2f}% of the total is discarded with this filter.")
@@ -158,7 +160,7 @@ class Visualization_for_lang:
         
         if data_id is not None:
             st.session_state[data_id] = displayed_examples_edited
-            
+                             
         # Applying highlight to row based on annotation value
         df_styled = displayed_examples_edited.style.apply(Visualization_for_lang.highlight_non_rows, axis=1)
 
@@ -182,7 +184,7 @@ class Visualization_for_lang:
     def data_editor_on_change(self, data_editor_id, data_id):
         # Get the edited rows from the data editor
         editor_state = st.session_state[data_editor_id]
-        
+       
         for data_editor_index, updates in editor_state["edited_rows"].items():
             for edited_key, edited_value in updates.items():
                 # Get the original dataframe index of the row
@@ -192,8 +194,51 @@ class Visualization_for_lang:
 
         # save the annotation state in the session
         st.session_state["annotation_data"] = self.docs[["annotation"]]
+    
+    def f1_score_calculation():
         
+        if "retained_docs_data" in st.session_state and "discarded_docs_data" in st.session_state:
+
+            retained_annotations = st.session_state["retained_docs_data"]["annotation"]
+            discarded_annotations = st.session_state["discarded_docs_data"]["annotation"]
+
+            #True Positive value(User marked as retain and appears in retain table)
+            TP = (retained_annotations == "retain").sum() 
+
+            #True Negative value(User named as discard and appears in the discard table)
+            TN = (discarded_annotations == "discard").sum()
+
+            #False Positive(User marked as discard and appears in retain table)
+            FP = (retained_annotations == "discard").sum() 
+
+            #False Negative (User marked as retain and appears in discard table)
+            FN = (discarded_annotations == "retain").sum()  
+
+            
+        else:
+
+            TP = 0
+            TN = 0
+            FP = 0
+            FN = 0
         
+        prec = Precision(TP,FP)
+        rec = Recall(TP,FN)
+
+        metrics_df = pd.DataFrame([{
+        "True Positives (TP)": TP,
+        "False Positives (FP)": FP,
+        "False Negatives (FN)": FN,
+        "Precision": round(prec, 4),
+        "Recall": round(rec, 4),
+        "F1 Score": round(F1_score(prec,rec), 4),
+        "Accuracy": round(Accuracy(TP,TN,FP,FN), 4)
+        }])
+
+        st.session_state["metrics_df"] = metrics_df
+        return metrics_df
+                
+    
     def filtering_of_docs(self):
         def set_sliders():
             columns = list(self.docs)
@@ -554,6 +599,9 @@ class Visualization_for_lang:
         with st.expander(f"Filtering on documents, for {self.num_docs} {self.lang} documents"):
             st.header(f"Filtering on documents, for {self.num_docs} {self.lang} documents")
 
+            st.subheader("Metrics")
+            metrics_placeholder = st.empty()
+
             if "labels" in list(self.docs):
                 chosen_label = st.selectbox(
                     label="Consider only documents that include the following label",
@@ -669,6 +717,11 @@ class Visualization_for_lang:
                 
                 Visualization_for_lang.display_dataset(self.docs, all_conds, "Retained documents", "docs", data_editor_id="retained_docs", data_id="retained_docs_data", on_annotation_change_fn=self.data_editor_on_change)
 
+                metrics_df = Visualization_for_lang.f1_score_calculation()
+                if metrics_df is not None and not metrics_df.empty:
+                    metrics_placeholder.dataframe(metrics_df, hide_index=True)
+                               
+
             st.header("Save data")
             
             data_json = st.session_state["json_data"]
@@ -693,7 +746,6 @@ class Visualization_for_lang:
             # Provide a button for the user to save the file
             if st.button("Save data as JSON"):
                 save_file()
-
 
     def filtering_of_words(self):
         if not (self.words is None):
@@ -1061,6 +1113,9 @@ class Visualization:
         if "annotation_data" in st.session_state:
             del st.session_state.annotation_data
         
+        if "metrics_df" in st.session_state:
+            del st.session_state.metrics_df
+
     def choose_lang(self):
         options = config.FILES_IN_GENERATED_SIGNALS_DIR
         file_chosen = st.selectbox("Select the file for visualization", options, on_change=self.file_select_on_change)
@@ -1138,9 +1193,8 @@ def load_visualization():
     visualization_instance = Visualization(path_instructions)
     visualization_instance.choose_lang()
     visualization_instance.resetting_data()
-    visualization_instance.visualization()
-    
-    
+    visualization_instance.visualization()  
+
 if __name__ == "__main__":
     st.set_page_config(layout="wide")
     load_visualization() 
