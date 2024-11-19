@@ -197,7 +197,7 @@ class Visualization_for_lang:
     
     def f1_score_calculation():
         
-        if "retained_docs_data" in st.session_state:
+        if "retained_docs_data" in st.session_state and "discarded_docs_data" in st.session_state:
 
             retained_annotations = st.session_state["retained_docs_data"]["annotation"]
             discarded_annotations = st.session_state["discarded_docs_data"]["annotation"]
