@@ -8,6 +8,11 @@ import base64
 import json
 import pandas as pd
 import math
+from matplotlib.backends.backend_pdf import PdfPages
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.colors import HexColor
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
 
 
 pd.options.mode.chained_assignment = None
@@ -127,6 +132,10 @@ class Visualization_for_lang:
         if "histograms" not in st.session_state:
             st.session_state["histograms"] = []
 
+        if "keys" not in st.session_state:
+            st.session_state["keys"] = []
+        
+
         checkbox = st.checkbox("Diplay distribution",value=True, key=f"display_distribution_{key[0]}")
         if checkbox:
             fig, ax = plt.subplots()
@@ -141,7 +150,7 @@ class Visualization_for_lang:
             buf = BytesIO()
             fig.savefig(buf, format="pdf")
 
-        if key[0] not in st.session_state["keys"]:
+        if key[0] not in st.session_state ["keys"]:
             st.session_state["histograms"].append(buf)
             st.session_state["keys"].append(key[0])
 
@@ -253,6 +262,39 @@ class Visualization_for_lang:
 
         st.session_state["metrics_df"] = metrics_df
         return metrics_df
+    
+    def metrics_to_pdf(metrics_df):
+        output_buffer = BytesIO()
+        doc = SimpleDocTemplate(output_buffer, pagesize=letter)
+        elements = []
+        styles = getSampleStyleSheet()
+        header = Paragraph("Metrics", styles["Heading1"])  # Styled Header
+
+        # Add header and spacing
+        elements.append(header)
+        elements.append(Spacer(1, 12))  # Add space below the header
+
+        data = [metrics_df.columns.tolist()] + metrics_df.values.tolist()
+        table = Table(data)
+        #creating the style of the table (0,0) being the top-left (-1,0) last column in th first row
+        style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), HexColor('#D3D3D3')),
+            ('GRID', (0, 0), (-1, -1), 1, 'black'),
+        ])
+
+        header = Paragraph("Metrics", doc)
+        table.setStyle(style)
+
+        # Add the table to the document
+        elements.append(table)
+
+        # Build the document
+        doc.build(elements)
+
+        # Return the output buffer with the PDF content
+        output_buffer.seek(0)
+        return output_buffer
+
         
 
     
@@ -943,6 +985,11 @@ class Visualization_for_lang:
         for key, hist_buf in zip(st.session_state["keys"], st.session_state["histograms"]):
             hist_buf.seek(0)  
             pdf_merger.append(hist_buf)
+
+        if "metrics_df" in st.session_state:
+            metrics_df = st.session_state["metrics_df"]
+            metrics_pdf = Visualization_for_lang.metrics_to_pdf(metrics_df)
+            pdf_merger.append(metrics_pdf)
 
         # After all PDFs are appended, write to the output buffer
         output_buffer = BytesIO()
