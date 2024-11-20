@@ -8,6 +8,7 @@ import base64
 import json
 import pandas as pd
 import math
+
 from matplotlib.backends.backend_pdf import PdfPages
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.colors import HexColor
@@ -134,7 +135,6 @@ class Visualization_for_lang:
 
         if "keys" not in st.session_state:
             st.session_state["keys"] = []
-        
 
         checkbox = st.checkbox("Diplay distribution",value=True, key=f"display_distribution_{key[0]}")
         if checkbox:
@@ -150,7 +150,7 @@ class Visualization_for_lang:
             buf = BytesIO()
             fig.savefig(buf, format="pdf")
 
-        if key[0] not in st.session_state ["keys"]:
+        if key[0] not in st.session_state["keys"]:
             st.session_state["histograms"].append(buf)
             st.session_state["keys"].append(key[0])
 
@@ -268,11 +268,12 @@ class Visualization_for_lang:
         doc = SimpleDocTemplate(output_buffer, pagesize=letter)
         elements = []
         styles = getSampleStyleSheet()
-        header = Paragraph("Metrics", styles["Heading1"])  # Styled Header
-
+        header_style = styles['Heading2']
+        header_style.alignment = 1
+        header = Paragraph("Metrics", header_style)
         # Add header and spacing
         elements.append(header)
-        elements.append(Spacer(1, 12))  # Add space below the header
+        elements.append(Spacer(1, 12)) 
 
         data = [metrics_df.columns.tolist()] + metrics_df.values.tolist()
         table = Table(data)
@@ -282,7 +283,6 @@ class Visualization_for_lang:
             ('GRID', (0, 0), (-1, -1), 1, 'black'),
         ])
 
-        header = Paragraph("Metrics", doc)
         table.setStyle(style)
 
         # Add the table to the document
