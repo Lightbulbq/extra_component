@@ -108,7 +108,6 @@ class Visualization_for_lang:
             # if saved annotation state is in the session, apply it to the loaded dataframe
             annotation_df = st.session_state["annotation_data"]
             self.docs_checkpoint["annotation"] = annotation_df["annotation"]    
-        print(self.flagged_words)
         
         self.docs = self.docs_checkpoint
 
@@ -507,9 +506,9 @@ class Visualization_for_lang:
                         flagged_words_file = st.text_input("Enter flagged words, separated by a comma (,), eg: hello,world.")
                         if flagged_words_file:
                             st.session_state["flagged_words"] = flagged_words_file
-                            new_flagged_words = flagged_words_file
-                            new_flagged_words = set(new_flagged_words.split(","))
-                            self.docs["flagged_words_ratio"] = self.docs_checkpoint["flagged_words_ratio"]
+                            # new_flagged_words = flagged_words_file
+                            new_flagged_words = set(flagged_words_file.split(","))
+                            # self.docs["flagged_words_ratio"] = self.docs_checkpoint["flagged_words_ratio"]
                             for i in range(len(self.docs["flagged_words_ratio"])):
                                 self.docs.loc[i, "flagged_words_ratio"] = Filtering.compute_flagged_words_ratio(
                                     self.docs.loc[i, "text"],
