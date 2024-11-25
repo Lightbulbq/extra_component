@@ -100,6 +100,7 @@ class Visualization_for_lang:
             # if saved annotation state is in the session, apply it to the loaded dataframe
             annotation_df = st.session_state["annotation_data"]
             self.docs_checkpoint["annotation"] = annotation_df["annotation"]    
+        print(self.flagged_words)
         
         self.docs = self.docs_checkpoint
 
@@ -446,6 +447,7 @@ class Visualization_for_lang:
                         # code that uses text input instead of file upload
                         flagged_words_file = st.text_input("Enter flagged words, separated by a comma (,), eg: hello,world.")
                         if flagged_words_file:
+                            st.session_state["flagged_words"] = flagged_words_file
                             new_flagged_words = flagged_words_file
                             new_flagged_words = set(new_flagged_words.split(","))
                             self.docs["flagged_words_ratio"] = self.docs_checkpoint["flagged_words_ratio"]
@@ -489,6 +491,21 @@ class Visualization_for_lang:
                     cond = get_cond(new_key[0], new_key[1], new_key[2])
                     Visualization_for_lang.print_discarded_by_cond(cond)
                     conds["flagged_words_ratio"] = [cond]
+
+                    if "flagged_words" not in st.session_state:
+                        st.session_state["flagged_words"] = []
+                    
+                    combined_flagged_data = {
+                        "Set Flagged_Words": list(self.flagged_words),
+                        "Newly Added Flagged_Words": st.session_state["flagged_words"],
+                    }
+                    download_flagged_data = json.dumps(combined_flagged_data)
+                    st.download_button(
+                        label = "Download flagged_words",
+                        data = download_flagged_data,
+                        file_name = f"{self.lang_dataset_id}_flagged_words.json",
+                        mime = "application/json"
+                    )
 
             if "stopwords_ratio" in columns:
                 with st.sidebar.expander("Stop words ratio"):
