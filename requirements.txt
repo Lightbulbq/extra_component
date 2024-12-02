@@ -6,6 +6,7 @@ fire==0.7.0
 kenlm @ https://github.com/kpu/kenlm/archive/master.zip
 matplotlib==3.9.2 
 numpy==1.26.0
+PyPDF2==3.0.1
 python-dotenv==1.0.1
 sentencepiece==0.2.0
 st-gsheets-connection==0.1.0
