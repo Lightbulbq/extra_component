@@ -76,6 +76,10 @@ Pre-requisites:
 1. Model(s) have been setup as described above under `Model(s) setup`
 2. Stats file containing quality signals have been generated as described above under `Data setup`
 3. `TRAIN_DATA_PATH` variable under `config.py` is configured to point to a valid file under `data/datasets`
+4. Words are added or removed from the excel sheet for the desired language, to show a updated `flagged words ratio` rerun `get_data_for_visualization.py` to generate a new signal for visualization
+   ```bash
+    python data_prep/get_data_for_visualization.py
+    ```
 
 To launch the app with Docker, run
 ```bash
