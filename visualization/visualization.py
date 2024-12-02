@@ -150,7 +150,6 @@ class Visualization_for_lang:
             fig.savefig(buf, format="pdf")
             st.session_state["histograms"][key[0]] = buf
 
-        print(st.session_state["histograms"])
         st.pyplot(fig)
 
 
