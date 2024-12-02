@@ -10,9 +10,6 @@ import config
 logging.basicConfig(level=logging.ERROR)
 log = logging.getLogger(__name__)
 
-
-st.set_page_config(layout="wide")
-
 # load all required config variables early on to inform the user of any missing variables
 
 try:

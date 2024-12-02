@@ -252,6 +252,7 @@ class Visualization_for_lang:
 
         metrics_df = pd.DataFrame([{
         "True Positives (TP)": TP,
+        "True Negatives (TN)": TN,
         "False Positives (FP)": FP,
         "False Negatives (FN)": FN,
         "Precision": round(prec, 4),
