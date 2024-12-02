@@ -132,9 +132,6 @@ class Visualization_for_lang:
         if "histograms" not in st.session_state:
             st.session_state["histograms"] = {}
 
-        if "keys" not in st.session_state:
-            st.session_state["keys"] = []
-
         checkbox = st.checkbox("Diplay distribution",value=True, key=f"display_distribution_{key[0]}")
         if checkbox:
             fig, ax = plt.subplots()
