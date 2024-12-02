@@ -118,8 +118,7 @@ class Visualization_for_lang:
         if row['annotation'] == "retain":
             style = ['background-color: rgba(57, 91, 59, 0.6)']  # Green for retain
         elif row['annotation'] == "discard":
-            style = ['background-color: rgba(110, 14, 14, 0.4)']  # Red for discard
-            
+            style = ['background-color: rgba(110, 14, 14, 0.4)']  # Red for discard  
         return style * len(row) # Apply the style to all columns
     
     
@@ -131,10 +130,7 @@ class Visualization_for_lang:
     def plot_hist(dataframe, key, num_bins=50):
 
         if "histograms" not in st.session_state:
-            st.session_state["histograms"] = []
-
-        if "keys" not in st.session_state:
-            st.session_state["keys"] = []
+            st.session_state["histograms"] = {}
 
         checkbox = st.checkbox("Diplay distribution",value=True, key=f"display_distribution_{key[0]}")
         if checkbox:
@@ -149,12 +145,9 @@ class Visualization_for_lang:
             #create a buffer to store the image
             buf = BytesIO()
             fig.savefig(buf, format="pdf")
+            st.session_state["histograms"][key[0]] = buf
 
-        if key[0] not in st.session_state["keys"]:
-            st.session_state["histograms"].append(buf)
-            st.session_state["keys"].append(key[0])
-
-        st.pyplot(fig)
+            st.pyplot(fig)
 
 
     @staticmethod
@@ -999,7 +992,7 @@ class Visualization_for_lang:
         )
 
         pdf_merger = PdfMerger()
-        for key, hist_buf in zip(st.session_state["keys"], st.session_state["histograms"]):
+        for key, hist_buf in st.session_state['histograms'].items():
             hist_buf.seek(0)  
             pdf_merger.append(hist_buf)
 
