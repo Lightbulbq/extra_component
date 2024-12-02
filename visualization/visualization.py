@@ -150,7 +150,7 @@ class Visualization_for_lang:
             fig.savefig(buf, format="pdf")
             st.session_state["histograms"][key[0]] = buf
 
-        st.pyplot(fig)
+            st.pyplot(fig)
 
 
     @staticmethod
@@ -248,6 +248,7 @@ class Visualization_for_lang:
 
         metrics_df = pd.DataFrame([{
         "True Positives (TP)": TP,
+        "True Negatives (TN)": TN,
         "False Positives (FP)": FP,
         "False Negatives (FN)": FN,
         "Precision": round(prec, 4),
