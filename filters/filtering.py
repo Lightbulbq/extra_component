@@ -18,7 +18,6 @@ from .normalization import normalization
 from .stopwords import stopwords
 from .flagged_words import flagged_words
 
-
 class LoadParameters:
     @staticmethod
     def load_parameters(lang_dataset_id):
@@ -1073,8 +1072,6 @@ class DatasetFiltering:
             ds_list.extend(new_rows)
 
         self.ds = Dataset.from_pandas(pd.DataFrame(data=ds_list))
-        # print('new format')
-        # print(self.ds[:5])
 
     def filtering(self):
         func_dataset_filtering = FunctionDatasetFiltering(
@@ -1087,8 +1084,4 @@ class DatasetFiltering:
 
     def save_dataset(self):
         pathlib.Path(self.path_dir_save_dataset).mkdir(parents=True, exist_ok=True)
-        # path_dir_save_dataset = pathlib.PurePath(
-        #     self.path_dir_save_dataset, self.lang_dataset_id
-        # )
-        # pathlib.Path(path_dir_save_dataset).mkdir(parents=True, exist_ok=True)
         self.ds.save_to_disk(self.path_dir_save_dataset)
