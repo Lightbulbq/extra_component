@@ -179,25 +179,42 @@ class Visualization_for_lang:
         if data_id is not None:
             st.session_state[data_id] = displayed_examples_edited
                              
-        # Applying highlight to row based on annotation value
-        df_styled = displayed_examples_edited.style.apply(Visualization_for_lang.highlight_non_rows, axis=1)
+        form_key = f"data_editor_form_{data_editor_id}"  # Ensure the form key is unique
 
-        # only disabled columns will display styling
-        st.data_editor(df_styled, hide_index=False,use_container_width=True, column_config={
-            "number_tokens": st.column_config.NumberColumn(disabled=True),
-            "character_repetition_ratio": st.column_config.NumberColumn(disabled=True),
-            "token_repetition_ratio": st.column_config.NumberColumn(disabled=True),
-            "special_characters_ratio":st.column_config.NumberColumn(disabled=True),
-            "flagged_words_ratio": st.column_config.NumberColumn(disabled=True),
-            "lang_id_score": st.column_config.NumberColumn(disabled=True),
-            "perplexity_score": st.column_config.NumberColumn(disabled=True),
-            "text":st.column_config.TextColumn(disabled=True),
-            "annotation": st.column_config.SelectboxColumn(
-                options=['retain','discard'],  # Provide annotation options
+        # Wrap the data editor inside a form
+        with st.form(form_key):
+            df_styled = displayed_examples_edited.style.apply(
+                Visualization_for_lang.highlight_non_rows, axis=1
             )
-        }, key=data_editor_id,
-        on_change=on_annotation_change_fn, args=[data_editor_id, data_id])
 
+            # Use st.data_editor inside the form
+            edited_df = st.data_editor(
+                df_styled,
+                hide_index=False,
+                use_container_width=True,
+                column_config={
+                    "number_tokens": st.column_config.NumberColumn(disabled=True),
+                    "character_repetition_ratio": st.column_config.NumberColumn(disabled=True),
+                    "token_repetition_ratio": st.column_config.NumberColumn(disabled=True),
+                    "special_characters_ratio": st.column_config.NumberColumn(disabled=True),
+                    "flagged_words_ratio": st.column_config.NumberColumn(disabled=True),
+                    "lang_id_score": st.column_config.NumberColumn(disabled=True),
+                    "perplexity_score": st.column_config.NumberColumn(disabled=True),
+                    "text": st.column_config.TextColumn(disabled=True),
+                    "annotation": st.column_config.SelectboxColumn(
+                        options=['retain', 'discard'],  # Provide annotation options
+                    ),
+                },
+                key=data_editor_id,
+            )
+
+            # Add a submit button to the form
+            submitted = st.form_submit_button("Submit Changes")
+            
+        # Handle form submission
+        if submitted:
+            on_annotation_change_fn(data_editor_id, data_id)
+            st.rerun()
 
     def data_editor_on_change(self, data_editor_id, data_id):
         # Get the edited rows from the data editor
