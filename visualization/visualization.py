@@ -25,6 +25,7 @@ import matplotlib.pyplot as plt
 import sys
 from pathlib import Path
 
+st.set_page_config(layout="wide")
 # Append the path of the parent directory to the python path
 # to find the files filtering.py and languages_id.py in the parent directory
 sys.path.append(str(Path(sys.path[0]).parent.absolute().parent.absolute()))
