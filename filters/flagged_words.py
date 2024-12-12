@@ -4,8 +4,9 @@
 # https://github.com/thisandagain/washyourmouthoutwithsoap/blob/develop/data/build.json
 # and
 # https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words
-from streamlit_gsheets import GSheetsConnection
+
 import streamlit as st
+from streamlit_gsheets import GSheetsConnection
 
 st.set_page_config(layout="wide")
 conn = st.connection("authdb", type=GSheetsConnection)

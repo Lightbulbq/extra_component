@@ -52,55 +52,16 @@ def get_authorized_users():
 # checking if the directory exist if it doesnt it will automatically create a unique folder base of unique email
 
 
-def create_user_directory(email=None):
-    if email is None:
-        user_dir = os.path.join(config.ROOT_DIR, "user","single_user", "admin")
-    else:
-        user_dir = os.path.join(config.ROOT_DIR, "user","multi_user", f"datafiles_{email}")
-    if not os.path.exists(user_dir):
-        os.makedirs(user_dir)
-
-    st.session_state['user_directory'] = user_dir
-
-    return user_dir
-
-
-def updated_dataset(user_dir):
-    if "newly_added_files" not in st.session_state:
-        st.session_state["newly_added_files"] = []
-    newly_added_files = []
-    for dirpath, direname, filenames in os.walk(user_dir):
-        for filename in filenames:
-            if filename.endswith('.json'):
-                relative_path = os.path.relpath(dirpath, start=config.ROOT_DIR)
-                if os.path.join(relative_path, filename) not in config.FILES_IN_GENERATED_SIGNALS_DIR:
-                    config.FILES_IN_GENERATED_SIGNALS_DIR.append(
-                        os.path.join(relative_path, filename))
-                    newly_added_files.append(
-                        os.path.join(relative_path, filename))
-    st.session_state["newly_added_files"].extend(newly_added_files)
-    return newly_added_files
-
-
-def resetting_data_signal():
-    if "newly_added_files" in st.session_state:
-        for file in st.session_state["newly_added_files"]:
-            if file in config.FILES_IN_GENERATED_SIGNALS_DIR:
-                config.FILES_IN_GENERATED_SIGNALS_DIR.remove(file)
-
-        # Clear the list in session state after processing
-        st.session_state["newly_added_files"].clear()
 
 
 if __name__ == "__main__":
     # if authentication is not required, load the visualization app immediately
     if not require_auth:
-        user_dataset = create_user_directory(None)
-        newly_added_files = updated_dataset(user_dataset)
+        user_dataset = vis.Visualization.create_user_directory(None)
+        newly_added_files = vis.Visualization.updated_dataset(user_dataset)
         vis.load_visualization()
-        resetting_data_signal()
+        vis.Visualization.resetting_data()
         st.stop()
-
     authorized_users = get_authorized_users()
 
     try:
@@ -116,11 +77,11 @@ if __name__ == "__main__":
         if st.session_state['authentication_status'] is True:
             user_email = st.session_state['email']
             sanitized_email = user_email.replace("@", "_at_").replace(".", "_")
-            user_dataset = create_user_directory(sanitized_email)
-            newly_added_files = updated_dataset(user_dataset)
+            user_dataset = vis.Visualization.create_user_directory(sanitized_email)
+            newly_added_files = vis.Visualization.updated_dataset(user_dataset)
             st.write(f'Welcome {user_email}')
             vis.load_visualization()
-            resetting_data_signal()
+            vis.Visualization.resetting_data_signal()
             authenticator.logout('Logout', 'sidebar')
         else:
             authenticator.login(location="main")

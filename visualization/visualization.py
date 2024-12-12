@@ -25,7 +25,6 @@ import matplotlib.pyplot as plt
 import sys
 from pathlib import Path
 
-st.set_page_config(layout="wide")
 # Append the path of the parent directory to the python path
 # to find the files filtering.py and languages_id.py in the parent directory
 sys.path.append(str(Path(sys.path[0]).parent.absolute().parent.absolute()))
@@ -1248,7 +1247,46 @@ class Visualization:
                 #clearing of data
                 self.file_select_on_change()
         st.session_state["prev_email"] = user_email
+
     
+    def create_user_directory(email=None):
+        if email is None:
+            user_dir = os.path.join(config.ROOT_DIR, "user","single_user", "admin")
+        else:
+            user_dir = os.path.join(config.ROOT_DIR, "user","multi_user", f"datafiles_{email}")
+        if not os.path.exists(user_dir):
+            os.makedirs(user_dir)
+
+        st.session_state['user_directory'] = user_dir
+
+        return user_dir
+
+
+    def updated_dataset(user_dir):
+        if "newly_added_files" not in st.session_state:
+            st.session_state["newly_added_files"] = []
+        newly_added_files = []
+        for dirpath, direname, filenames in os.walk(user_dir):
+            for filename in filenames:
+                if filename.endswith('.json'):
+                    relative_path = os.path.relpath(dirpath, start=config.ROOT_DIR)
+                    if os.path.join(relative_path, filename) not in config.FILES_IN_GENERATED_SIGNALS_DIR:
+                        config.FILES_IN_GENERATED_SIGNALS_DIR.append(
+                            os.path.join(relative_path, filename))
+                        newly_added_files.append(
+                            os.path.join(relative_path, filename))
+        st.session_state["newly_added_files"].extend(newly_added_files)
+        return newly_added_files
+
+
+    def resetting_data_signal():
+        if "newly_added_files" in st.session_state:
+            for file in st.session_state["newly_added_files"]:
+                if file in config.FILES_IN_GENERATED_SIGNALS_DIR:
+                    config.FILES_IN_GENERATED_SIGNALS_DIR.remove(file)
+            # Clear the list in session state after processing
+            st.session_state["newly_added_files"].clear()
+
 
     def visualization(self):
         # Check if the language has been selected
@@ -1308,7 +1346,9 @@ def load_visualization():
     visualization_instance.visualization()  
 
 if __name__ == "__main__":
-    st.set_page_config(layout="wide")
-    load_visualization() 
+    user_dataset = Visualization.create_user_directory(None)
+    newly_added_files = Visualization.updated_dataset(user_dataset)
+    load_visualization()
+    Visualization.resetting_data_signal()
     
     
