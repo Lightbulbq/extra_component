@@ -18,12 +18,15 @@ try:
     auth_cookie_key = st.secrets.auth["cookie_key"]
     auth_cookie_expiry = st.secrets.auth["cookie_expiry"]
     auth_cache_ttl = st.secrets.connections.authdb["ttl"]
-except AttributeError as e:
+    authdb_url = st.secrets.connections.authdb["spreadsheet"]
+except Exception as e:
     require_auth = False
     auth_cookie_name = "qsviz-cookie"
     auth_cookie_key = "qsviz-cookie-key"
     auth_cookie_expiry = 1
     auth_cache_ttl = 3600
+    authdb_url = ""
+    st.info(repr(e))
 
 
 @st.cache_data(ttl=auth_cache_ttl)
@@ -31,8 +34,8 @@ def get_authorized_users():
     # retrieve data from google sheet containing authorized users
     authorized_users = {'usernames': {}}
 
-    conn = st.connection("authdb", type=GSheetsConnection)
-    df = conn.read(ttl=auth_cache_ttl)
+    conn = st.connection("gsheets", type=GSheetsConnection)
+    df = conn.read(spreadsheet=authdb_url, ttl=auth_cache_ttl)
     for row in df.itertuples():
         username = row.username
         authorized_users["usernames"][username] = {
