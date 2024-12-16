@@ -822,6 +822,9 @@ class Visualization_for_lang:
             json_string = json.dumps(st.session_state["json_data"])
             user_directory = st.session_state.get('user_directory')
             file_path = os.path.join(user_directory, file_name)
+            
+            if file_path not in config.FILES_IN_GENERATED_SIGNALS_DIR:
+                config.FILES_IN_GENERATED_SIGNALS_DIR.append(file_path)
 
             # Function to create file and trigger download
             def save_file():
