@@ -7,7 +7,7 @@
 
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
-import streamlit as st
+
 
 st.set_page_config(layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
