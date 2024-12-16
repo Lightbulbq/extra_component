@@ -1,11 +1,17 @@
+version: "3.8"
+
 services:
-  qsviz-app:
-    restart: unless-stopped
-    build: .
+  visualization:
+    build:
+      context: .
+      dockerfile: Dockerfile.visualization
     ports:
       - "8501:8501"
     volumes:
+      - .:/app
       - ./models:/app/models
       - ./data:/app/data
-    env_file:
-      - .env
+    environment:
+      # Optional: Set Streamlit configuration
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
