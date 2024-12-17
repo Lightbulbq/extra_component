@@ -63,7 +63,6 @@ if __name__ == "__main__":
         user_dataset = vis.Visualization.create_user_directory(None)
         newly_added_files = vis.Visualization.updated_dataset(user_dataset)
         vis.load_visualization()
-        vis.Visualization.resetting_data()
         st.stop()
     authorized_users = get_authorized_users()
 
@@ -85,6 +84,7 @@ if __name__ == "__main__":
             st.write(f'Welcome {user_email}')
             vis.load_visualization()
             vis.Visualization.resetting_data_signal()
+            st.sidebar.write("Debug: Sidebar is active")
             authenticator.logout('Logout', 'sidebar')
         else:
             authenticator.login(location="main")
