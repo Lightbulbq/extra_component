@@ -1,3 +1,4 @@
+import streamlit as st
 from datasets import load_dataset
 from tqdm import tqdm
 import json
@@ -292,9 +293,11 @@ def get_data(lang_dataset_id):
     Parameters:
     - lang_dataset_id: Language dataset identifier.
     """
+    if not sys.argv[2]:
+        sys.argv[2] = "examples_with_stats_sent_lvl"
     # Output path for saving statistics
     os.makedirs(config.GENERATED_SIGNALS_DIR, exist_ok=True)
-    path_save_stats = os.path.join(config.GENERATED_SIGNALS_DIR, f"{lang_dataset_id}_examples_with_stats_sent_lvl_{config.GENERATED_SIGNALS_FILE_SUFFIX}.json")
+    path_save_stats = os.path.join(config.GENERATED_SIGNALS_DIR, f"{lang_dataset_id}_{sys.argv[2]}_{config.GENERATED_SIGNALS_FILE_SUFFIX}.json")
 
     # Paths for language detection models
     path_fasttext_model = config.FASTTEXT_MODEL_PATH
@@ -316,12 +319,16 @@ def get_data(lang_dataset_id):
     split = "train"
 
     # number of documents to visualize
-    num_iter = config.NUM_DATA_SAMPLES
+    if int(sys.argv[1])is not None:
+        num_iter = int(sys.argv[1])
+    else: 
+        num_iter = config.NUM_DATA_SAMPLES
 
     print(f"Start to load {lang_dataset_id} data")
     dataset = load_dataset("json", data_files=data_files, split=split, streaming=True).shuffle(
         buffer_size=num_iter, seed=42
     )
+    
     print("Done load data - OK")
 
     get_data_for_visualization = GetDataForVisualization(
@@ -341,6 +348,5 @@ def get_data(lang_dataset_id):
 
 
 if __name__ == "__main__":
-    # process each language
     for lang_id in config.LANG_IDS:
         get_data(lang_id)

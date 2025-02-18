@@ -14,6 +14,13 @@ ROOT_DIR = os.getcwd()
 BASE_DIR = os.path.join(ROOT_DIR, "visualization")
 DATA_DIR = os.path.join(ROOT_DIR, "data", "datasets")
 
+DATASETS_IN_DATA_DIR =[]
+
+for dirpath, dirnames, filenames in os.walk(DATA_DIR):
+    for filename in filenames:
+        relative_path = os.path.relpath(dirpath,start=ROOT_DIR)
+        DATASETS_IN_DATA_DIR.append(os.path.join(relative_path, filename))
+
 GENERATED_SIGNALS_DIR = os.path.join(ROOT_DIR, "data", "generated_signals") 
 
 FILES_IN_GENERATED_SIGNALS_DIR =[]
@@ -44,7 +51,8 @@ KENLM_PATH = os.path.join(ROOT_DIR, "models", "kenlm")
 FASTTEXT_MODEL_PATH = os.path.join(ROOT_DIR, "models", "lid.176.bin")
 
 # Defines number of samples to visualize. Use count_lines if you want the maximum, else you can set smaller numbers. Note that if VISUALIZE_WHOLE_DOCUMENTS is false, this refers to the lines of the documents as samples
-NUM_DATA_SAMPLES = count_lines(TRAIN_DATA_PATH) # uncomment for all documents/lines
+NUM_DATA_SAMPLES = 500
+
 
 # # Defines the language ID - this label is used to choose kenlm model and stopwords list
 LANG_IDS = ['en']  # possibilities from set: {'zh', 'ms', 'my', 'th', 'lo', 'km', 'ta'}
